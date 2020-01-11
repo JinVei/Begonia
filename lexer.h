@@ -2,9 +2,11 @@
 #define BEGONIA_LEXICAL_H
 #include <string>
 #include <fstream>
+#include <map>
+
 namespace begonia
 {
-	using token_t = int16_t;
+	using token_t = uint16_t;
 
 	enum class TOKEN_VAL: token_t
 	{
@@ -32,7 +34,7 @@ namespace begonia
 		TOKEN_OP_BOR,		// |
 		TOKEN_OP_AND,		// &&
 		TOKEN_OP_OR,		// ||
-		TOKEN_OP_NOT,		// !
+		TOKEN_OP_NEG,		// !
 		TOKEN_OP_LT,		// <
 		TOKEN_OP_LE,		// <=
 		TOKEN_OP_GT,		// >
@@ -50,9 +52,11 @@ namespace begonia
 		TOKEN_KW_TRUE,
 		TOKEN_KW_VAR,
 		TOKEN_KW_FUNC,
+
 		TOKEN_NUMBER,
 		TOKEN_STRING,
 		TOKEN_IDENTIFIER,
+
 	};
 
 	struct Token
@@ -66,28 +70,33 @@ namespace begonia
 	{
 	private:
 		void SkipWhitespaceAndEmptyline();
-		Token AssignToken();
-		Token EqualToken();
-		Token AdditionToken();
-		Token SubtractionToken();
-		Token MultiplicationToken();
-		Token DivisionToken();
-		Token DivisionToken();
 
+		Token ParseKeywordToken(std::string);
+		Token ParseSeparationToken();
+		Token ParseNumberToken(std::string);
+		Token ParseQuoteToken();
+		Token ParseIdentifierToken(std::string);
+
+		void initAcceptableCharacterTable();
+		bool IsSeparationCharacter(char);
+		bool IsAcceptabCharacter(char);
+		auto GetWord() -> std::string;
+
+		void Interrupt(std::string);
 	public:
-		~Lexer(){
-			_sourceStream.close();
-		}
+		~Lexer();
 		Lexer(std::string fileName);
 		Token NextToken();
 		Token GetNextToken();
-
 	private:
 		std::ifstream 	_sourceStream;
 		std::string 	_sourceFileName;
 		long		 	_currentLine;
 		bool			_isReady;
 		Token			_nextToken;
+		uint8_t			_acceptableCharacterTable[256] = {0};
 	};
+
+	extern std::map<std::string, TOKEN_VAL> KEY_WORD;
 }
 #endif

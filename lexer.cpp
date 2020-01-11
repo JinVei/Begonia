@@ -1,23 +1,24 @@
+#include "Lexer.h"
+
 #include <map>
 #include <string>
-
-#include "lexer.h"
+#include <iostream>
 
 namespace begonia {
 
-	std::map<TOKEN_VAL, std::string> KEY_WORD =  {
-		{TOKEN_VAL::TOKEN_KW_IF, 		"if"},
-		{TOKEN_VAL::TOKEN_KW_ELSEIF, 	"elif"},
-		{TOKEN_VAL::TOKEN_KW_ELSE,	 	"else"},
-		{TOKEN_VAL::TOKEN_KW_FOR,	 	"for"},
-		{TOKEN_VAL::TOKEN_KW_WHILE,	 	"while"},
-		{TOKEN_VAL::TOKEN_KW_IN,	 	"in"},
-		{TOKEN_VAL::TOKEN_KW_FUNC,	 	"func"},
-		{TOKEN_VAL::TOKEN_KW_VAR,	 	"var"},
-		{TOKEN_VAL::TOKEN_KW_FALSE,	 	"false"},
-		{TOKEN_VAL::TOKEN_KW_TRUE,	 	"true"},
-		{TOKEN_VAL::TOKEN_OP_OR,	 	"or"},
-		{TOKEN_VAL::TOKEN_OP_AND,	 	"and"},
+	std::map<std::string, TOKEN_VAL> KEY_WORD =  {
+		{"if", 		TOKEN_VAL::TOKEN_KW_IF,},
+		{"elif", 	TOKEN_VAL::TOKEN_KW_ELSEIF},
+		{"else", 	TOKEN_VAL::TOKEN_KW_ELSE},
+		{"for", 	TOKEN_VAL::TOKEN_KW_FOR},
+		{"while", 	TOKEN_VAL::TOKEN_KW_WHILE},
+		{"in", 		TOKEN_VAL::TOKEN_KW_IN},
+		{"func", 	TOKEN_VAL::TOKEN_KW_FUNC},
+		{"var", 	TOKEN_VAL::TOKEN_KW_VAR},
+		{"false", 	TOKEN_VAL::TOKEN_KW_FALSE},
+		{"true", 	TOKEN_VAL::TOKEN_KW_TRUE},
+		{"or", 		TOKEN_VAL::TOKEN_OP_OR},
+		{"and", 	TOKEN_VAL::TOKEN_OP_AND},
 	};
 
 	Lexer::Lexer(std::string fileName)
@@ -32,37 +33,23 @@ namespace begonia {
 		_currentLine 	= 1;
 		_isReady = true;
 
+		initAcceptableCharacterTable();
 		_nextToken = NextToken();
 	}
 
-	Token Lexer::AssignToken()
+	Lexer::~Lexer()
 	{
-		return Token{TOKEN_VAL::TOKEN_OP_ASSIGN, _currentLine, "="};
+		if (_sourceStream.is_open())
+			_sourceStream.close();
 	}
-
-	Token Lexer::EqualToken()
+	
+	void Lexer::Interrupt(std::string errlog)
 	{
-		return Token{TOKEN_VAL::TOKEN_OP_EQ, _currentLine, "=="};
-	}
-
-	Token Lexer::AdditionToken()
-	{
-		return Token{TOKEN_VAL::TOKEN_OP_ADD, _currentLine, "+"};
-	}
-
-	Token Lexer::SubtractionToken()
-	{
-		return Token{TOKEN_VAL::TOKEN_OP_SUB, _currentLine, "-"};
-	}
-
-	Token Lexer::MultiplicationToken()
-	{
-		return Token{TOKEN_VAL::TOKEN_OP_MUL, _currentLine, "*"};
-	}
-
-	Token Lexer::DivisionToken()
-	{
-		return Token{TOKEN_VAL::TOKEN_OP_DIV, _currentLine, "/"};
+		char line[100]={0};
+			_sourceStream.getline(line, 99);
+			std::cout << "[ERROR] at line " << _currentLine << ":" << errlog << std::endl;
+			std::cout <<  line << std::endl;
+			std::terminate();
 	}
 
 	void Lexer::SkipWhitespaceAndEmptyline()
@@ -83,59 +70,37 @@ namespace begonia {
 	{
 		if (!_isReady || _nextToken.val == TOKEN_VAL::TOKEN_SEP_EOF)
 			return _nextToken;
-		Token ret = _nextToken;
+		Token nextToken = _nextToken;
 		_nextToken = NextToken();
-		return ret;
+		return nextToken;
 	}
 
 	Token Lexer::NextToken()
 	{
 		SkipWhitespaceAndEmptyline();
 
-		std::string word;
-		char ch = _sourceStream.get();
-		switch(ch)
-		{
-		case '=':
-			if (_sourceStream.peek() != '=')
-				return AssignToken();
-			else
-			{
-				_sourceStream.ignore();
-				return EqualToken();
-			}
-		case '+':
-			return AdditionToken();
-		case '-':
-			return SubtractionToken();
-		case '*':
-			return MultiplicationToken();
-		case '/':
-			return DivisionToken();
-		case '%':
-			break;
-		case '^':
-			break;
-		case '!':
-			// !=
-			break;
-		case '|':
-		// 	// ||
-		// 	break;
-		 case '&':
-		// 	// &&
-		// 	break;
-		case '<':
-			// <=
-			break;
-		case '>':
-			// >=
-			break;
-		case '{':
-			break;
-		case '}':
-			break;
-		}
+		Token quote = ParseQuoteToken();
+		if(quote.val != TOKEN_VAL::TOKEN_SEP_EOF)
+			return quote;
+
+		if (IsSeparationCharacter(_sourceStream.peek()))
+			return ParseSeparationToken();
+
+		std::string word = GetWord();
+
+		Token keyword = ParseKeywordToken(word);
+		if(keyword.val != TOKEN_VAL::TOKEN_SEP_EOF)
+			return keyword;
+		
+		Token number = ParseNumberToken(word);
+		if(number.val != TOKEN_VAL::TOKEN_SEP_EOF)
+			return number;
+
+		Token identifier = ParseIdentifierToken(word);
+		if(identifier.val != TOKEN_VAL::TOKEN_SEP_EOF)
+			return identifier;
+		
+		Interrupt("Can not parse Token: " + word);
 	}
 
 }
