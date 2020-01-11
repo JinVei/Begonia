@@ -1,0 +1,12 @@
+
+var lexerTest = 89;
+func test()
+{
+	if lexerTest != 0 {
+		lexerTest = 100
+	}
+
+	var str = "hi"
+	var str1 = 'no, nerver'
+
+}
