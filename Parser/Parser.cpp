@@ -339,7 +339,7 @@ namespace begonia
 
     auto Parser::ParseExpression() -> ExpressionPtr {
 
-        ExpressionPtr exp = ParseOpExpression({TokenType::TOKEN_OP_OR, TokenType::TOKEN_OP_AND}, std::bind(&Parser::ParseExpressionL7, this));
+        ExpressionPtr exp = ParseOpExpression({TokenType::TOKEN_OP_OR}, std::bind(&Parser::ParseExpressionL7, this));
 
         return exp;
     }
@@ -392,7 +392,7 @@ namespace begonia
                 TokenType::TOKEN_OP_GT, // >
                 TokenType::TOKEN_OP_GE, // >=
                 TokenType::TOKEN_OP_EQ, // ==
-                TokenType::TOKEN_OP_NEQ, // !=
+                TokenType::TOKEN_OP_NEQ,// !=
             },
             std::bind(&Parser::ParseExpressionL5, this)
         );
@@ -419,9 +419,9 @@ namespace begonia
 
     auto Parser::ParseExpressionL3() -> ExpressionPtr {
         return ParseOpExpression({
-                TokenType::TOKEN_OP_BOR, // |
+                TokenType::TOKEN_OP_BOR,  // |
                 TokenType::TOKEN_OP_BAND, // &
-                TokenType::TOKEN_OP_XOR, // ^
+                TokenType::TOKEN_OP_XOR,  // ^
             },
             std::bind(&Parser::ParseExpressionL2, this)
         );
@@ -429,8 +429,7 @@ namespace begonia
 
     auto Parser::ParseExpressionL2() -> ExpressionPtr {
         Token tryToken = _lexer.LookAhead(0);
-        // !
-        if (tryToken.val == TokenType::TOKEN_OP_NEG) {
+        if (tryToken.val == TokenType::TOKEN_OP_NEG) { // !
             Token opToken = _lexer.GetNextToken();
 
             ExpressionPtr rExp = ParseExpressionL1();

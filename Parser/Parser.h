@@ -12,56 +12,21 @@ stat :=   [IfStat]
         | [RetStat]
         | CallFuncStat
 
-IfStat := if exp '{' block '}' [elif exp '{' block '}'] [else '{' block '}'] 
+IfStat          := if exp '{' block '}' [elif exp '{' block '}'] [else '{' block '}'] 
+DeclarVarStat   := var identifier ['=' exp] ;
+DeclarFuncStat  := func identifier '(' () | (exp [',' exp])  ')' '{' block '}' ;
+AssignStat      := identifier '=' exp ;
+WhileStat       := while exp '{' block '}' 
+RetStat         := return | return exp ["," exp];
 
-DeclarVarStat := 'var' identifier ['=' exp] ;
-
-DeclarFuncStat := func identifier '(' [exp ','] exp  ')' '{' block '}' ;
-
-AssignStat := identifier '=' exp ;
-
-WhileStat := while exp '{' block '}' 
-
-RetStat := return [exp [,]] ;
-
-exp0:
-nil false true number string identifier
-exp1:
-()
-exp2:
-!
-exp3:
-|
-&
-^
-exp4:
-*
-/
-%
-exp5:
-+
--
-exp6:
-<
->
->=
-<=
-==
-exp7:
-&&
-exp8:
-||
-
-
-exp8 := exp7 {('||') exp7}
+exp  := exp7 {('||') exp7}
 exp7 := exp6 {(&&) exp6}
-exp6 := exp5 { ('<='|'>='|'=='|'<'|'>') exp5}
+exp6 := exp5 { ('<='|'>='|'=='|'<'|'>'|'!=') exp5}
 exp5 := exp4 { ('+'|'-') exp4}
 exp4 := exp3 {('*'|'/'|'%') exp3}
 exp3 := exp2 {('|' | '&' | '^') exp2}
 exp2 := !exp1 | exp1
-exp1 := '(' exp8 ')' | exp0
-exp0 := nil | false | true | number | string | identifier | funcallStat
+exp1 :=  '(' exp8 ')' | nil | false | true | number | string | identifier | funcallStat
 */
 
 #include "Lexer.h"
@@ -85,38 +50,40 @@ namespace begonia
     class Parser {
     public:
         Parser(std::string sourcePath);
+        void Parse();
     private:
         Lexer _lexer;
 
         StatementBlock _ast;
 
-        auto ParseStatement() -> StatementPtr;
+        auto ParseStatement()       -> StatementPtr;
         auto TryNextStatementType() -> StatementType;
         auto ParseAssignStatement() -> AssignStatementPtr;
-        auto ParseExpression() -> ExpressionPtr;
-        auto ParseExpressionL8() -> ExpressionPtr;
-        auto ParseExpressionL7() -> ExpressionPtr;
-        auto ParseExpressionL6() -> ExpressionPtr;
-        auto ParseExpressionL5() -> ExpressionPtr;
-        auto ParseExpressionL4() -> ExpressionPtr;
-        auto ParseExpressionL3() -> ExpressionPtr;
-        auto ParseExpressionL2() -> ExpressionPtr;
-        auto ParseExpressionL1() -> ExpressionPtr;
+        auto ParseExpression()      -> ExpressionPtr;
+        auto ParseExpressionL8()    -> ExpressionPtr;
+        auto ParseExpressionL7()    -> ExpressionPtr;
+        auto ParseExpressionL6()    -> ExpressionPtr;
+        auto ParseExpressionL5()    -> ExpressionPtr;
+        auto ParseExpressionL4()    -> ExpressionPtr;
+        auto ParseExpressionL3()    -> ExpressionPtr;
+        auto ParseExpressionL2()    -> ExpressionPtr;
+        auto ParseExpressionL1()    -> ExpressionPtr;
         // auto ParseExpressionL0() -> ExpressionPtr;
-        auto ParseOpExpression (std::vector<TokenType> acceptedTokenType,  OpExpPaser subExpPaeser) -> ExpressionPtr;
-        auto ParseFuncCallExpression() -> FuncCallExpressionPtr;
+        ExpressionPtr
+        ParseOpExpression ( std::vector<TokenType>  acceptedTokenType,
+                            OpExpPaser              subExpPaeser);
+
+        auto ParseFuncCallExpression()  -> FuncCallExpressionPtr;
         auto ParseSemicolon();
-        auto ParseIfStatement() -> IfStatementPtr;
-        auto ParseCurlyBlock() -> StatementBlock;
-        auto ParseCallFuncStatement() -> FuncCallStatementPtr;
-        auto ParseDefineVarStatement() -> DefVarStatementPtr;
-        auto ParseDefineVar() -> DefVarStatementPtr;
+        auto ParseIfStatement()         -> IfStatementPtr;
+        auto ParseCurlyBlock()          -> StatementBlock;
+        auto ParseCallFuncStatement()   -> FuncCallStatementPtr;
+        auto ParseDefineVarStatement()  -> DefVarStatementPtr;
+        auto ParseDefineVar()           -> DefVarStatementPtr;
         auto ParseDefineFuncStatement() -> DefFuncStatementPtr;
-        auto ParseMultipleExpression() -> std::vector<ExpressionPtr>;
-        auto ParseReturnStatement() -> ReturnStatementPtr;
-        auto ParseWhileStatement() -> WhileStatementPtr;
-    public:
-        void Parse();
+        auto ParseMultipleExpression()  -> std::vector<ExpressionPtr>;
+        auto ParseReturnStatement()     -> ReturnStatementPtr;
+        auto ParseWhileStatement()      -> WhileStatementPtr;
     };
 
 }
