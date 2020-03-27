@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <map>
+#include <vector>
 
 namespace begonia
 {
@@ -52,6 +53,8 @@ namespace begonia
 		TOKEN_KW_TRUE,
 		TOKEN_KW_VAR,
 		TOKEN_KW_FUNC,
+		TOKEN_KW_RETURN,
+		TOKEN_KW_NIL,
 
 		TOKEN_NUMBER,
 		TOKEN_STRING,
@@ -71,11 +74,11 @@ namespace begonia
 	private:
 		bool SkipWhitespaceAndEmptyline();
 
-		Token ParseKeywordToken(std::string);
-		Token ParseSeparationToken();
-		Token ParseNumberToken(std::string);
-		Token ParseQuoteToken();
-		Token ParseIdentifierToken(std::string);
+		Token ScanKeywordToken(std::string);
+		Token ScanSeparationToken();
+		Token ScanNumberToken(std::string);
+		Token ScanQuoteToken();
+		Token ScanIdentifierToken(std::string);
 
 		void InitAcceptableCharacterTable();
 		bool IsSeparationCharacter(char);
@@ -89,16 +92,21 @@ namespace begonia
 		~Lexer();
 		Lexer(std::string fileName);
 		Token GetNextToken();
+		Token LookAhead(size_t step);
+
 	private:
-		std::ifstream 	_sourceStream;
-		std::string 	_sourceFileName;
-		std::size_t		_currentLineOffset = 0;
-		long		 	_currentLine = 0;
-		bool			_isReady;
-		Token			_nextToken;
-		uint8_t			_acceptableCharacterTable[256] = {0};
+		std::ifstream		_sourceStream;
+		std::string			_sourceFileName;
+		std::size_t			_currentLineOffset = 0;
+		long				_currentLine = 0;
+		bool				_isReady;
+		Token				_nextToken;
+		uint8_t				_acceptableCharacterTable[256] = {0};
+		std::vector<Token>	_tokens;
+		size_t				_tokenIndex = 0;
 	};
 
-	extern std::map<std::string, TOKEN_VAL> KEY_WORD;
+	extern const std::map<std::string, TOKEN_VAL> KEY_WORD;
+	extern std::map<TOKEN_VAL, std::string> KEY_WORD_TYPE;
 }
 #endif

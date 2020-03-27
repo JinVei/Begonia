@@ -30,7 +30,7 @@ namespace begonia {
 
 	}
 
-	Token Lexer::ParseSeparationToken()
+	Token Lexer::ScanSeparationToken()
 	{
 		char ch = _sourceStream.get();
 		switch(ch)
@@ -120,10 +120,10 @@ namespace begonia {
 		case '{':
 			return Token{TOKEN_VAL::TOKEN_SEP_LCURLY, _currentLine, "{"};
 		case '}':
-			return Token{TOKEN_VAL::TOKEN_SEP_RPAREN, _currentLine, "}"};
+			return Token{TOKEN_VAL::TOKEN_SEP_RCURLY, _currentLine, "}"};
 		default:
 			Interrupt(std::string("Can not accept '") + ch + std::string("'"));
-			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ParseSeparationToken"};
+			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ScanSeparationToken"};
 		}
 		// _sourceStream.unget();
 	}
@@ -164,53 +164,29 @@ namespace begonia {
 		return word;
 	}
 
-	Token Lexer::ParseKeywordToken(std::string word)
+	Token Lexer::ScanKeywordToken(std::string word)
 	{
 		auto key = KEY_WORD.find(word);
-		if(key == KEY_WORD.end())
-			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ParseKeywordToekn"};
-
-		switch (key->second)
+		if(key == KEY_WORD.end()) 
 		{
-		case TOKEN_VAL::TOKEN_KW_IF:
-			return Token{TOKEN_VAL::TOKEN_KW_IF, _currentLine, key->first};
-		case TOKEN_VAL::TOKEN_KW_ELSE:
-			return Token{TOKEN_VAL::TOKEN_KW_ELSE, _currentLine, key->first};
-		case TOKEN_VAL::TOKEN_KW_ELSEIF:
-			return Token{TOKEN_VAL::TOKEN_KW_ELSEIF, _currentLine, key->first};
-		case TOKEN_VAL::TOKEN_KW_FALSE:
-			return Token{TOKEN_VAL::TOKEN_KW_FALSE, _currentLine, key->first};
-		case TOKEN_VAL::TOKEN_KW_TRUE:
-			return Token{TOKEN_VAL::TOKEN_KW_TRUE, _currentLine, key->first};
-		case TOKEN_VAL::TOKEN_KW_FOR:
-			return Token{TOKEN_VAL::TOKEN_KW_FOR, _currentLine, key->first};
-		case TOKEN_VAL::TOKEN_KW_FUNC:
-			return Token{TOKEN_VAL::TOKEN_KW_FUNC, _currentLine, key->first};
-		case TOKEN_VAL::TOKEN_KW_IN:
-			return Token{TOKEN_VAL::TOKEN_KW_IN, _currentLine, key->first};
-		case TOKEN_VAL::TOKEN_KW_VAR:
-			return Token{TOKEN_VAL::TOKEN_KW_VAR, _currentLine, key->first};
-		case TOKEN_VAL::TOKEN_KW_WHILE:
-			return Token{TOKEN_VAL::TOKEN_KW_WHILE, _currentLine, key->first};
-		default:
-			Interrupt("Trap in default case");
-			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ParseKeywordToken"};
+			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ScanKeywordToekn"};
 		}
+		return Token{key->second, _currentLine, key->first};
 	}
 
-	Token Lexer::ParseNumberToken(std::string word)
+	Token Lexer::ScanNumberToken(std::string word)
 	{
 		std::regex integer("[[:digit:]]+");
 		if (!regex_match(word, integer))
-			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ParseNumberToken"};
+			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ScanNumberToken"};
 		else
 			return Token{TOKEN_VAL::TOKEN_NUMBER, _currentLine, word};
 	}
 
-	Token Lexer::ParseQuoteToken()
+	Token Lexer::ScanQuoteToken()
 	{
 		if (_sourceStream.peek() != '\'' && _sourceStream.peek() != '\"')
-			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ParseStringToken"};
+			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ScanStringToken"};
 
 		std::string str;
 		char breakSymbol = _sourceStream.get();
@@ -227,11 +203,11 @@ namespace begonia {
 		}
 	}
 
-	Token Lexer::ParseIdentifierToken(std::string word)
+	Token Lexer::ScanIdentifierToken(std::string word)
 	{
 		std::regex identifier("[a-zA-Z][a-zA-Z0-9]*");
 		if (!regex_match(word, identifier))
-			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ParseIdentifierToken"};
+			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ScanIdentifierToken"};
 		else
 			return Token{TOKEN_VAL::TOKEN_IDENTIFIER, _currentLine, word};
 	}

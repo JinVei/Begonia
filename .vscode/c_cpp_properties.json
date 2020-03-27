@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "name": "MacOs",
+            "includePath": [
+                "${workspaceRoot}",
+                "${workspaceRoot}/Lexer",
+                "${workspaceRoot}/Parser",
+                "/usr/local/include/c++",
+                "/usr/local/include"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "__GNUC__=6",
+                "__cdecl=__attribute__((__cdecl__))"
+            ],
+            "browse": {
+                "path": [
+                    "${workspaceRoot}"
+                ]
+            },
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

@@ -1,0 +1,29 @@
+
+
+var kelo = 1;
+
+func name (var a) {
+    kelo = (1+2-3*90/10&da)^90|oi&10;
+}
+name3();
+name(2);
+
+if no {
+    print("hello!");
+    return r1;
+}
+
+func testWhile() 
+{
+    exit = false;
+    while is == true || no && run {
+        doSomething(args,shoot,handler);
+        if exit {
+            exit(0);
+        }
+    }
+    if tryCondition() {
+        print("hi");
+    }
+    return v1,r2, k3;
+}
