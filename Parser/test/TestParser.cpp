@@ -4,5 +4,5 @@ int main()
 {
     begonia::Parser parser("./test_parser.bga");
     parser.Parsing();
-	return 0;
+    return 0;
 }
