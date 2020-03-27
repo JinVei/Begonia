@@ -28,6 +28,7 @@ namespace begonia {
         for (int i=123; i<=126; i++)
             _acceptableCharacterTable[i] = 2;
 
+        _acceptableCharacterTable['_'] = 1;
     }
 
 
@@ -207,7 +208,7 @@ namespace begonia {
 
     Token Lexer::ScanIdentifierToken(std::string word)
     {
-        std::regex identifier("[a-zA-Z][a-zA-Z0-9]*");
+        std::regex identifier("[a-zA-Z_][a-zA-Z0-9_]*");
         if (!regex_match(word, identifier))
             return Token{TokenType::TOKEN_SEP_EOF, _currentLine, "ScanIdentifierToken"};
         else

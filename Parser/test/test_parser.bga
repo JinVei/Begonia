@@ -13,8 +13,9 @@ if no {
     return r1;
 }
 
-func testWhile() 
+func testWhile(var uk="q") 
 {
+    his_6name1 = ho;
     exit = false;
     while is == true || no && run {
         doSomething(args,shoot,handler);
@@ -25,5 +26,8 @@ func testWhile()
     if tryCondition() {
         print("hi");
     }
+    if !my || (you + he) && his_son {
+        kalo = say(moon) + damn * 2 +1;
+    } 
     return v1,r2, k3;
 }
