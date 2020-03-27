@@ -9,7 +9,9 @@ namespace begonia
 {
 	using token_t = uint16_t;
 
-	enum class TOKEN_VAL: token_t
+	// TODO: naming notations.TokenType
+	//enum class TokenType: token_t
+	enum class TokenType: token_t
 	{
 		TOKEN_SEP_EOF			= 0,
 		TOKEN_SEP_SEMICOLON,	// ;
@@ -64,9 +66,11 @@ namespace begonia
 
 	struct Token
 	{
-		TOKEN_VAL	val;
+		TokenType	val;
 		long 		line;
 		std::string	word;
+		// TODO
+		std::string	file_name_;
 	};
 
 	class Lexer
@@ -106,7 +110,7 @@ namespace begonia
 		size_t				_tokenIndex = 0;
 	};
 
-	extern const std::map<std::string, TOKEN_VAL> KEY_WORD;
-	extern std::map<TOKEN_VAL, std::string> KEY_WORD_TYPE;
+	extern const std::map<std::string, TokenType>	KEY_WORD;
+	extern std::map<TokenType, std::string>			KEY_WORD_TYPE;
 }
 #endif

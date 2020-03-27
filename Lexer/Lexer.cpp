@@ -9,23 +9,23 @@
 //int backtrace(void **buffer, int size);
 namespace begonia {
 
-	const std::map<std::string, TOKEN_VAL> KEY_WORD =  {
-		{"if", 		TOKEN_VAL::TOKEN_KW_IF,},
-		{"elif", 	TOKEN_VAL::TOKEN_KW_ELSEIF},
-		{"else", 	TOKEN_VAL::TOKEN_KW_ELSE},
-		{"for", 	TOKEN_VAL::TOKEN_KW_FOR},
-		{"while", 	TOKEN_VAL::TOKEN_KW_WHILE},
-		//{"in", 		TOKEN_VAL::TOKEN_KW_IN},
-		{"func", 	TOKEN_VAL::TOKEN_KW_FUNC},
-		{"var", 	TOKEN_VAL::TOKEN_KW_VAR},
-		{"false", 	TOKEN_VAL::TOKEN_KW_FALSE},
-		{"true", 	TOKEN_VAL::TOKEN_KW_TRUE},
-		{"or", 		TOKEN_VAL::TOKEN_OP_OR},
-		{"and", 	TOKEN_VAL::TOKEN_OP_AND},
-		{"return", 	TOKEN_VAL::TOKEN_KW_RETURN},
-		{"nil", 	TOKEN_VAL::TOKEN_KW_NIL},
+	const std::map<std::string, TokenType> KEY_WORD =  {
+		{"if", 		TokenType::TOKEN_KW_IF,},
+		{"elif", 	TokenType::TOKEN_KW_ELSEIF},
+		{"else", 	TokenType::TOKEN_KW_ELSE},
+		{"for", 	TokenType::TOKEN_KW_FOR},
+		{"while", 	TokenType::TOKEN_KW_WHILE},
+		//{"in", 		TokenType::TOKEN_KW_IN},
+		{"func", 	TokenType::TOKEN_KW_FUNC},
+		{"var", 	TokenType::TOKEN_KW_VAR},
+		{"false", 	TokenType::TOKEN_KW_FALSE},
+		{"true", 	TokenType::TOKEN_KW_TRUE},
+		{"or", 		TokenType::TOKEN_OP_OR},
+		{"and", 	TokenType::TOKEN_OP_AND},
+		{"return", 	TokenType::TOKEN_KW_RETURN},
+		{"nil", 	TokenType::TOKEN_KW_NIL},
 	};
-	std::map<TOKEN_VAL, std::string> KEY_WORD_TYPE;
+	std::map<TokenType, std::string> KEY_WORD_TYPE;
 
 	Lexer::Lexer(std::string fileName)
 	{
@@ -36,7 +36,7 @@ namespace begonia {
 		_sourceStream 		= std::ifstream(fileName, std::ifstream::in);
 		if (!_sourceStream.is_open()){
 			_isReady = false;
-			_nextToken = Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "Failed to open file:" + fileName};
+			_nextToken = Token{TokenType::TOKEN_SEP_EOF, _currentLine, "Failed to open file:" + fileName};
 			return;
 		}
 		_sourceFileName = fileName;
@@ -109,7 +109,7 @@ namespace begonia {
 		
 		while (_tokens.size() <= _tokenIndex) 
 		{
-			if (!_isReady || _nextToken.val == TOKEN_VAL::TOKEN_SEP_EOF)
+			if (!_isReady || _nextToken.val == TokenType::TOKEN_SEP_EOF)
 				return _nextToken;
 
 			_nextToken = NextToken();
@@ -121,10 +121,10 @@ namespace begonia {
 	Token Lexer::NextToken()
 	{
 		if (!SkipWhitespaceAndEmptyline())
-			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "EOF"};
+			return Token{TokenType::TOKEN_SEP_EOF, _currentLine, "EOF"};
 
 		Token quote = ScanQuoteToken();
-		if(quote.val != TOKEN_VAL::TOKEN_SEP_EOF)
+		if(quote.val != TokenType::TOKEN_SEP_EOF)
 			return quote;
 
 		if (IsSeparationCharacter(_sourceStream.peek()))
@@ -133,19 +133,19 @@ namespace begonia {
 		std::string word = GetWord();
 
 		Token keyword = ScanKeywordToken(word);
-		if(keyword.val != TOKEN_VAL::TOKEN_SEP_EOF)
+		if(keyword.val != TokenType::TOKEN_SEP_EOF)
 			return keyword;
 		
 		Token number = ScanNumberToken(word);
-		if(number.val != TOKEN_VAL::TOKEN_SEP_EOF)
+		if(number.val != TokenType::TOKEN_SEP_EOF)
 			return number;
 
 		Token identifier = ScanIdentifierToken(word);
-		if(identifier.val != TOKEN_VAL::TOKEN_SEP_EOF)
+		if(identifier.val != TokenType::TOKEN_SEP_EOF)
 			return identifier;
 		
 		Interrupt("Can not parse Token: " + word);
-		return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "Interrupt"};
+		return Token{TokenType::TOKEN_SEP_EOF, _currentLine, "Interrupt"};
 	}
 
 	// step = 0 mean look ahead next token
@@ -157,7 +157,7 @@ namespace begonia {
 
 		while (_tokens.size() <= _tokenIndex + step) 
 		{
-			if (!_isReady || _nextToken.val == TOKEN_VAL::TOKEN_SEP_EOF)
+			if (!_isReady || _nextToken.val == TokenType::TOKEN_SEP_EOF)
 				return _nextToken;
 
 			_nextToken = NextToken();

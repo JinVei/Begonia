@@ -10,6 +10,6 @@ int main()
 	do {
 		token = lexer.GetNextToken();
 		std::cout << "val:" << std::to_string(int(token.val)) << ", " << "line:" << token.line << ", " << "word:" << token.word << std::endl;
-	} while(token.val != TOKEN_VAL::TOKEN_SEP_EOF);
+	} while(token.val != TokenType::TOKEN_SEP_EOF);
 
 }

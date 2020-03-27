@@ -30,6 +30,8 @@ namespace begonia {
 
 	}
 
+
+
 	Token Lexer::ScanSeparationToken()
 	{
 		char ch = _sourceStream.get();
@@ -39,91 +41,91 @@ namespace begonia {
 			if (_sourceStream.peek() == '=')
 			{
 				_sourceStream.ignore();
-				return Token{TOKEN_VAL::TOKEN_OP_EQ, _currentLine, "=="};
+				return Token{TokenType::TOKEN_OP_EQ, _currentLine, "=="};
 			}
 			else
-				return Token{TOKEN_VAL::TOKEN_OP_ASSIGN, _currentLine, "="};
+				return Token{TokenType::TOKEN_OP_ASSIGN, _currentLine, "="};
 
 		case '+':
-			return Token{TOKEN_VAL::TOKEN_OP_ADD, _currentLine, "+"};
+			return Token{TokenType::TOKEN_OP_ADD, _currentLine, "+"};
 		case '-':
-			return Token{TOKEN_VAL::TOKEN_OP_SUB, _currentLine, "-"};
+			return Token{TokenType::TOKEN_OP_SUB, _currentLine, "-"};
 		case '*':
-			return Token{TOKEN_VAL::TOKEN_OP_MUL, _currentLine, "*"};
+			return Token{TokenType::TOKEN_OP_MUL, _currentLine, "*"};
 		case '/':
-			return Token{TOKEN_VAL::TOKEN_OP_DIV, _currentLine, "/"};
+			return Token{TokenType::TOKEN_OP_DIV, _currentLine, "/"};
 		case '%':
-			return Token{TOKEN_VAL::TOKEN_OP_MOD, _currentLine, "%"};
+			return Token{TokenType::TOKEN_OP_MOD, _currentLine, "%"};
 		case '^':
-			return Token{TOKEN_VAL::TOKEN_OP_XOR, _currentLine, "^"};
+			return Token{TokenType::TOKEN_OP_XOR, _currentLine, "^"};
 		case '!':
 			if (_sourceStream.peek() == '=')
 			{
 				_sourceStream.ignore();
-				return Token{TOKEN_VAL::TOKEN_OP_NEQ, _currentLine, "!="};
+				return Token{TokenType::TOKEN_OP_NEQ, _currentLine, "!="};
 			}
 			else
-				return Token{TOKEN_VAL::TOKEN_OP_NEG, _currentLine, "!"};
+				return Token{TokenType::TOKEN_OP_NEG, _currentLine, "!"};
 			
 		case '|':
 			if (_sourceStream.peek() == '|')
 			{
 				_sourceStream.ignore();
-				return Token{TOKEN_VAL::TOKEN_OP_OR, _currentLine, "||"};
+				return Token{TokenType::TOKEN_OP_OR, _currentLine, "||"};
 			}
 			else
-				return Token{TOKEN_VAL::TOKEN_OP_BOR, _currentLine, "|"};
+				return Token{TokenType::TOKEN_OP_BOR, _currentLine, "|"};
 
 		 case '&':
 		 	if (_sourceStream.peek() == '&')
 			 {
 				_sourceStream.ignore();
-				return Token{TOKEN_VAL::TOKEN_OP_AND, _currentLine, "&&"};
+				return Token{TokenType::TOKEN_OP_AND, _currentLine, "&&"};
 			}
 			else
-				return Token{TOKEN_VAL::TOKEN_OP_BAND, _currentLine, "&"};
+				return Token{TokenType::TOKEN_OP_BAND, _currentLine, "&"};
 
 		case '<':
 			if (_sourceStream.peek() == '=')
 			 {
 				_sourceStream.ignore();
-				return Token{TOKEN_VAL::TOKEN_OP_LE, _currentLine, "<="};
+				return Token{TokenType::TOKEN_OP_LE, _currentLine, "<="};
 			}
 			else
-				return Token{TOKEN_VAL::TOKEN_OP_LT, _currentLine, "<"};
+				return Token{TokenType::TOKEN_OP_LT, _currentLine, "<"};
 
 		case '>':
 			if (_sourceStream.peek() == '=')
 			 {
 				_sourceStream.ignore();
-				return Token{TOKEN_VAL::TOKEN_OP_GE, _currentLine, ">="};
+				return Token{TokenType::TOKEN_OP_GE, _currentLine, ">="};
 			}
 			else
-				return Token{TOKEN_VAL::TOKEN_OP_GT, _currentLine, ">"};
+				return Token{TokenType::TOKEN_OP_GT, _currentLine, ">"};
 
 		case ';':
-			return Token{TOKEN_VAL::TOKEN_SEP_SEMICOLON, _currentLine, ";"};
+			return Token{TokenType::TOKEN_SEP_SEMICOLON, _currentLine, ";"};
 		case ',':
-			return Token{TOKEN_VAL::TOKEN_SEP_COMMA, _currentLine, ","};
+			return Token{TokenType::TOKEN_SEP_COMMA, _currentLine, ","};
 		case '.':
-			return Token{TOKEN_VAL::TOKEN_SEP_DOT, _currentLine, "."};
+			return Token{TokenType::TOKEN_SEP_DOT, _currentLine, "."};
 		case ':':
-			return Token{TOKEN_VAL::TOKEN_SEP_COLON, _currentLine, ":"};
+			return Token{TokenType::TOKEN_SEP_COLON, _currentLine, ":"};
 		case '(':
-			return Token{TOKEN_VAL::TOKEN_SEP_LPAREN, _currentLine, "("};
+			return Token{TokenType::TOKEN_SEP_LPAREN, _currentLine, "("};
 		case ')':
-			return Token{TOKEN_VAL::TOKEN_SEP_RPAREN, _currentLine, ")"};
+			return Token{TokenType::TOKEN_SEP_RPAREN, _currentLine, ")"};
 		case '[':
-			return Token{TOKEN_VAL::TOKEN_SEP_LBRACKET, _currentLine, "["};
+			return Token{TokenType::TOKEN_SEP_LBRACKET, _currentLine, "["};
 		case ']':
-			return Token{TOKEN_VAL::TOKEN_SEP_RBRACKET, _currentLine, "]"};
+			return Token{TokenType::TOKEN_SEP_RBRACKET, _currentLine, "]"};
 		case '{':
-			return Token{TOKEN_VAL::TOKEN_SEP_LCURLY, _currentLine, "{"};
+			return Token{TokenType::TOKEN_SEP_LCURLY, _currentLine, "{"};
 		case '}':
-			return Token{TOKEN_VAL::TOKEN_SEP_RCURLY, _currentLine, "}"};
+			return Token{TokenType::TOKEN_SEP_RCURLY, _currentLine, "}"};
 		default:
 			Interrupt(std::string("Can not accept '") + ch + std::string("'"));
-			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ScanSeparationToken"};
+			return Token{TokenType::TOKEN_SEP_EOF, _currentLine, "ScanSeparationToken"};
 		}
 		// _sourceStream.unget();
 	}
@@ -169,7 +171,7 @@ namespace begonia {
 		auto key = KEY_WORD.find(word);
 		if(key == KEY_WORD.end()) 
 		{
-			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ScanKeywordToekn"};
+			return Token{TokenType::TOKEN_SEP_EOF, _currentLine, "ScanKeywordToekn"};
 		}
 		return Token{key->second, _currentLine, key->first};
 	}
@@ -178,15 +180,15 @@ namespace begonia {
 	{
 		std::regex integer("[[:digit:]]+");
 		if (!regex_match(word, integer))
-			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ScanNumberToken"};
+			return Token{TokenType::TOKEN_SEP_EOF, _currentLine, "ScanNumberToken"};
 		else
-			return Token{TOKEN_VAL::TOKEN_NUMBER, _currentLine, word};
+			return Token{TokenType::TOKEN_NUMBER, _currentLine, word};
 	}
 
 	Token Lexer::ScanQuoteToken()
 	{
 		if (_sourceStream.peek() != '\'' && _sourceStream.peek() != '\"')
-			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ScanStringToken"};
+			return Token{TokenType::TOKEN_SEP_EOF, _currentLine, "ScanStringToken"};
 
 		std::string str;
 		char breakSymbol = _sourceStream.get();
@@ -195,7 +197,7 @@ namespace begonia {
 		{
 			char ch = _sourceStream.get();
 			if (ch == breakSymbol)
-				return Token{TOKEN_VAL::TOKEN_STRING, _currentLine, str};
+				return Token{TokenType::TOKEN_STRING, _currentLine, str};
 			else if(ch == EOF)
 				Interrupt("miss quotation token");
 			else
@@ -207,8 +209,8 @@ namespace begonia {
 	{
 		std::regex identifier("[a-zA-Z][a-zA-Z0-9]*");
 		if (!regex_match(word, identifier))
-			return Token{TOKEN_VAL::TOKEN_SEP_EOF, _currentLine, "ScanIdentifierToken"};
+			return Token{TokenType::TOKEN_SEP_EOF, _currentLine, "ScanIdentifierToken"};
 		else
-			return Token{TOKEN_VAL::TOKEN_IDENTIFIER, _currentLine, word};
+			return Token{TokenType::TOKEN_IDENTIFIER, _currentLine, word};
 	}
 }

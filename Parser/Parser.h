@@ -103,7 +103,7 @@ namespace begonia
 		auto ParsingExpressionL2() -> ExpressionPtr;
 		auto ParsingExpressionL1() -> ExpressionPtr;
 		// auto ParsingExpressionL0() -> ExpressionPtr;
-		auto ParsingOpExpression (std::vector<TOKEN_VAL> acceptedTokenType,  OpExpPaser subExpPaeser) -> ExpressionPtr;
+		auto ParsingOpExpression (std::vector<TokenType> acceptedTokenType,  OpExpPaser subExpPaeser) -> ExpressionPtr;
 		auto ParsingFuncCallExpression() -> FuncCallExpressionPtr;
 		auto ParsingSemicolon();
 		auto ParsingIfStatement() -> IfStatementPtr;
