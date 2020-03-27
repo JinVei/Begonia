@@ -3,6 +3,6 @@
 int main()
 {
     begonia::Parser parser("./test_parser.bga");
-    parser.Parsing();
+    parser.Parse();
     return 0;
 }

@@ -6,11 +6,11 @@ namespace begonia
     Parser::Parser(std::string sourcePath): _lexer(sourcePath) {
     }
 
-    void Parser::Parsing(){
+    void Parser::Parse(){
         do {
             Token tryToken = _lexer.LookAhead(0);
             if (tryToken.val != TokenType::TOKEN_SEP_EOF){
-                StatementPtr stat = ParsingStatement();
+                StatementPtr stat = ParseStatement();
                 _ast.push_back(stat);
             } else {
                 break;
@@ -18,8 +18,8 @@ namespace begonia
         } while(1);
     }
 
-    void ParsingError(Token token, std::string expectedWord) {
-        printf("[ParsingError]:\nParsing error at line:%ld\n",token.line);
+    void ParseError(Token token, std::string expectedWord) {
+        printf("[ParseError]:\nParse error at line:%ld\n",token.line);
         printf("want '%s', but have '%s'\n", expectedWord.c_str(), token.word.c_str());
         exit(1);
     }
@@ -56,47 +56,47 @@ namespace begonia
             return StatementType::RETURN_STAT;
 
         default:
-            ParsingError(token, "UNKNOWN_STAT");
+            ParseError(token, "UNKNOWN_STAT");
             return StatementType::UNKNOWN_STAT;
 
         }
     }
 
-    auto Parser::ParsingStatement() -> StatementPtr {
+    auto Parser::ParseStatement() -> StatementPtr {
         StatementPtr statement;
         switch (TryNextStatementType()) {
         case StatementType::IF_STAT :
-            statement = ParsingIfStatement();
+            statement = ParseIfStatement();
             _ast.push_back(statement);
             break;
 
         case StatementType::ASSIGN_STAT :
-            statement = ParsingAssignStatement();
+            statement = ParseAssignStatement();
             _ast.push_back(statement);
             break;
 
         case StatementType::CALL_FUNC_STAT :
-            statement = ParsingCallFuncStatement();
+            statement = ParseCallFuncStatement();
             _ast.push_back(statement);
             break;
 
         case StatementType::DEF_FUNC_STAT :
-            statement = ParsingDefineFuncStatement();
+            statement = ParseDefineFuncStatement();
             _ast.push_back(statement);
             break;
 
         case StatementType::DEF_VAR_STAT :
-            statement = ParsingDefineVarStatement();
+            statement = ParseDefineVarStatement();
             _ast.push_back(statement);
             break;
 
         case StatementType::RETURN_STAT :
-            statement = ParsingReturnStatement();
+            statement = ParseReturnStatement();
             _ast.push_back(statement);
             break;
 
         case StatementType::WHILE_STAT :
-            statement = ParsingWhileStatement();
+            statement = ParseWhileStatement();
             _ast.push_back(statement);
             break;
 
@@ -107,10 +107,10 @@ namespace begonia
         return statement;
     }
 
-    auto Parser::ParsingCurlyBlock() -> StatementBlock {
+    auto Parser::ParseCurlyBlock() -> StatementBlock {
         Token lCurlyToken = _lexer.GetNextToken();
         if (lCurlyToken.val != TokenType::TOKEN_SEP_LCURLY) {
-            ParsingError(lCurlyToken, "{");
+            ParseError(lCurlyToken, "{");
             return StatementBlock();
         }
         StatementBlock block;
@@ -120,35 +120,35 @@ namespace begonia
             if (tryToken.val == TokenType::TOKEN_SEP_RCURLY) {
                 break;
             }
-            StatementPtr stat = ParsingStatement();
+            StatementPtr stat = ParseStatement();
             block.push_back(stat);
         } while(1);
 
         Token rCurlyToken = _lexer.GetNextToken();
         if (rCurlyToken.val != TokenType::TOKEN_SEP_RCURLY) {
-            ParsingError(rCurlyToken, "}");
+            ParseError(rCurlyToken, "}");
             return StatementBlock();
         }
         
         return block;
     }
 
-    auto Parser::ParsingSemicolon() {
+    auto Parser::ParseSemicolon() {
         Token SemiToken = _lexer.GetNextToken();
 
         if (SemiToken.val != TokenType::TOKEN_SEP_SEMICOLON) {
-            ParsingError(SemiToken, ";");
+            ParseError(SemiToken, ";");
         }
     }
 
-    auto Parser::ParsingWhileStatement() -> WhileStatementPtr {
+    auto Parser::ParseWhileStatement() -> WhileStatementPtr {
         Token whileToken = _lexer.GetNextToken();
         if (whileToken.val != TokenType::TOKEN_KW_WHILE) {
-            ParsingError(whileToken, "return");
+            ParseError(whileToken, "return");
         }
 
-        ExpressionPtr condExp = ParsingExpression();
-        StatementBlock block = ParsingCurlyBlock();
+        ExpressionPtr condExp = ParseExpression();
+        StatementBlock block = ParseCurlyBlock();
 
         auto stat = new WhileStatement{
             ._condition	= condExp,
@@ -157,36 +157,36 @@ namespace begonia
         return WhileStatementPtr(stat);
     }
 
-    auto Parser::ParsingReturnStatement() -> ReturnStatementPtr {
+    auto Parser::ParseReturnStatement() -> ReturnStatementPtr {
         Token returnToken = _lexer.GetNextToken();
         if (returnToken.val != TokenType::TOKEN_KW_RETURN) {
-            ParsingError(returnToken, "return");
+            ParseError(returnToken, "return");
         }
 
         std::vector<ExpressionPtr> returnVal;
-        returnVal = ParsingMultipleExpression();
-        ParsingSemicolon();
+        returnVal = ParseMultipleExpression();
+        ParseSemicolon();
 
         auto Stat = new ReturnStatement{._retValues = returnVal};
         return ReturnStatementPtr(Stat);
     }
 
-    auto Parser::ParsingDefineFuncStatement() -> DefFuncStatementPtr {
+    auto Parser::ParseDefineFuncStatement() -> DefFuncStatementPtr {
         Token funcKWToken = _lexer.GetNextToken(); // func
         if (funcKWToken.val != TokenType::TOKEN_KW_FUNC) {
-            ParsingError(funcKWToken, "func");
+            ParseError(funcKWToken, "func");
             return DefFuncStatementPtr(nullptr);
         }
 
         Token identifierToken = _lexer.GetNextToken();
         if (identifierToken.val != TokenType::TOKEN_IDENTIFIER) {
-            ParsingError(identifierToken, "identifier");
+            ParseError(identifierToken, "identifier");
             return DefFuncStatementPtr(nullptr);
         }
 
         Token lParenToken = _lexer.GetNextToken();
         if (lParenToken.val != TokenType::TOKEN_SEP_LPAREN) {
-            ParsingError(lParenToken, "(");
+            ParseError(lParenToken, "(");
             return DefFuncStatementPtr(nullptr);
         }
 
@@ -200,7 +200,7 @@ namespace begonia
         }
 
         while (continueParseDefVar){
-            DefVarStatementPtr defVar = ParsingDefineVar();
+            DefVarStatementPtr defVar = ParseDefineVar();
             defVars.push_back(defVar);
 
             Token tryToken = _lexer.GetNextToken();
@@ -209,12 +209,12 @@ namespace begonia
             } else if (tryToken.val == TokenType::TOKEN_SEP_RPAREN) { // )
                 continueParseDefVar = false;
             } else {
-                ParsingError(tryToken, ", )");
+                ParseError(tryToken, ", )");
                 return DefFuncStatementPtr(nullptr);
             }
         } 
 
-        StatementBlock block = ParsingCurlyBlock();
+        StatementBlock block = ParseCurlyBlock();
 
         auto defFuncStat = new DefFuncStatement {
             ._name 			= identifierToken.word,
@@ -226,17 +226,17 @@ namespace begonia
         
     }
 
-    auto Parser::ParsingDefineVar() -> DefVarStatementPtr {
+    auto Parser::ParseDefineVar() -> DefVarStatementPtr {
         Token varKw = _lexer.GetNextToken();
         Token varName = _lexer.GetNextToken();
 
         if (varKw.val != TokenType::TOKEN_KW_VAR) {
-            ParsingError(varKw, "var");
+            ParseError(varKw, "var");
             return DefVarStatementPtr(nullptr);
         }
 
         if (varName.val != TokenType::TOKEN_IDENTIFIER) {
-            ParsingError(varName, "identifier");
+            ParseError(varName, "identifier");
             return DefVarStatementPtr(nullptr);
         }
         Token tryToken = _lexer.LookAhead(0);
@@ -248,7 +248,7 @@ namespace begonia
             return DefVarStatementPtr(varDef);
         }
         _lexer.GetNextToken(); // =
-        ExpressionPtr exp = ParsingExpression();
+        ExpressionPtr exp = ParseExpression();
 
         auto varDef = new DefVarStatement {
             //._type = varType.word,
@@ -258,56 +258,56 @@ namespace begonia
         return DefVarStatementPtr(varDef);
     }
 
-    auto Parser::ParsingDefineVarStatement() -> DefVarStatementPtr {
-        DefVarStatementPtr stat = ParsingDefineVar();
-        ParsingSemicolon();
+    auto Parser::ParseDefineVarStatement() -> DefVarStatementPtr {
+        DefVarStatementPtr stat = ParseDefineVar();
+        ParseSemicolon();
 
         return stat;
     }
 
-    auto Parser::ParsingCallFuncStatement() -> FuncCallStatementPtr {
-        FuncCallExpressionPtr funcallExp = ParsingFuncCallExpression();
-        ParsingSemicolon();
+    auto Parser::ParseCallFuncStatement() -> FuncCallStatementPtr {
+        FuncCallExpressionPtr funcallExp = ParseFuncCallExpression();
+        ParseSemicolon();
         return FuncCallStatementPtr(new FuncCallStatement{Statement{},*funcallExp});
     }
     
-    auto Parser::ParsingAssignStatement() -> AssignStatementPtr {
+    auto Parser::ParseAssignStatement() -> AssignStatementPtr {
         Token token0 = _lexer.GetNextToken();
         Token token1 = _lexer.GetNextToken();
 
         if (token0.val != TokenType::TOKEN_IDENTIFIER) {
-            ParsingError(token0, "identifier");
+            ParseError(token0, "identifier");
         }
 
         if (token1.val != TokenType::TOKEN_OP_ASSIGN) {
-            ParsingError(token1, "=");
+            ParseError(token1, "=");
         }
 
-        ExpressionPtr exp = ParsingExpression();
+        ExpressionPtr exp = ParseExpression();
 
         auto stat = new AssignStatement {
             ._identifier = token0.word,
             ._assignValue = exp
         };
 
-        ParsingSemicolon();
+        ParseSemicolon();
 
         return AssignStatementPtr(stat);
     }
 
-    auto Parser::ParsingIfStatement() -> IfStatementPtr {
+    auto Parser::ParseIfStatement() -> IfStatementPtr {
         Token IfToken = _lexer.GetNextToken();
         if (IfToken.val != TokenType::TOKEN_KW_IF) {
-            ParsingError(IfToken, "if");
+            ParseError(IfToken, "if");
             return IfStatementPtr(nullptr);
         }
 
         std::list<IfBlock> ifBlocks;
         StatementBlock elseBlock;
 
-        ExpressionPtr ifCondExp = ParsingExpression();
+        ExpressionPtr ifCondExp = ParseExpression();
 
-        StatementBlock block = ParsingCurlyBlock();
+        StatementBlock block = ParseCurlyBlock();
         ifBlocks.push_back(IfBlock{block, ifCondExp});
 
         bool continueParseElifBlock = true;
@@ -315,13 +315,13 @@ namespace begonia
             Token tryToken = _lexer.LookAhead(0);
             if (tryToken.val == TokenType::TOKEN_KW_ELSEIF) {
                 Token elifToken = _lexer.GetNextToken();
-                ExpressionPtr condExp = ParsingExpression();
-                StatementBlock block = ParsingCurlyBlock();
+                ExpressionPtr condExp = ParseExpression();
+                StatementBlock block = ParseCurlyBlock();
                 ifBlocks.push_back(IfBlock{block, condExp});
 
             } else if (tryToken.val == TokenType::TOKEN_KW_ELSE) {
                 Token elseToken = _lexer.GetNextToken();
-                elseBlock = ParsingCurlyBlock();
+                elseBlock = ParseCurlyBlock();
                 continueParseElifBlock = false;
 
             } else {
@@ -337,15 +337,15 @@ namespace begonia
         return IfStatementPtr(ifStat);
     }
 
-    auto Parser::ParsingExpression() -> ExpressionPtr {
+    auto Parser::ParseExpression() -> ExpressionPtr {
 
-        ExpressionPtr exp = ParsingOpExpression({TokenType::TOKEN_OP_OR, TokenType::TOKEN_OP_AND}, std::bind(&Parser::ParsingExpressionL7, this));
+        ExpressionPtr exp = ParseOpExpression({TokenType::TOKEN_OP_OR, TokenType::TOKEN_OP_AND}, std::bind(&Parser::ParseExpressionL7, this));
 
         return exp;
     }
 
 
-    auto Parser::ParsingOpExpression (
+    auto Parser::ParseOpExpression (
         std::vector<TokenType> vAcceptedTokenType, 
         OpExpPaser subExpPaeser) 
         -> ExpressionPtr
@@ -381,12 +381,12 @@ namespace begonia
         return exp;
     }
 
-    auto Parser::ParsingExpressionL7() -> ExpressionPtr {
-        return ParsingOpExpression({TokenType::TOKEN_OP_AND}, std::bind(&Parser::ParsingExpressionL6, this));
+    auto Parser::ParseExpressionL7() -> ExpressionPtr {
+        return ParseOpExpression({TokenType::TOKEN_OP_AND}, std::bind(&Parser::ParseExpressionL6, this));
     }
 
-    auto Parser::ParsingExpressionL6() -> ExpressionPtr {
-        return ParsingOpExpression({
+    auto Parser::ParseExpressionL6() -> ExpressionPtr {
+        return ParseOpExpression({
                 TokenType::TOKEN_OP_LT, // <
                 TokenType::TOKEN_OP_LE, // <=
                 TokenType::TOKEN_OP_GT, // >
@@ -394,46 +394,46 @@ namespace begonia
                 TokenType::TOKEN_OP_EQ, // ==
                 TokenType::TOKEN_OP_NEQ, // !=
             },
-            std::bind(&Parser::ParsingExpressionL5, this)
+            std::bind(&Parser::ParseExpressionL5, this)
         );
     }
 
-    auto Parser::ParsingExpressionL5() -> ExpressionPtr {
-        return ParsingOpExpression({
+    auto Parser::ParseExpressionL5() -> ExpressionPtr {
+        return ParseOpExpression({
                 TokenType::TOKEN_OP_ADD, // +
                 TokenType::TOKEN_OP_SUB, // -
             },
-            std::bind(&Parser::ParsingExpressionL4, this)
+            std::bind(&Parser::ParseExpressionL4, this)
         );
     }
 
-    auto Parser::ParsingExpressionL4() -> ExpressionPtr {
-        return ParsingOpExpression({
+    auto Parser::ParseExpressionL4() -> ExpressionPtr {
+        return ParseOpExpression({
                 TokenType::TOKEN_OP_MUL, // *
                 TokenType::TOKEN_OP_DIV, // /
                 TokenType::TOKEN_OP_MOD, // %
             },
-            std::bind(&Parser::ParsingExpressionL3, this)
+            std::bind(&Parser::ParseExpressionL3, this)
         );
     }
 
-    auto Parser::ParsingExpressionL3() -> ExpressionPtr {
-        return ParsingOpExpression({
+    auto Parser::ParseExpressionL3() -> ExpressionPtr {
+        return ParseOpExpression({
                 TokenType::TOKEN_OP_BOR, // |
                 TokenType::TOKEN_OP_BAND, // &
                 TokenType::TOKEN_OP_XOR, // ^
             },
-            std::bind(&Parser::ParsingExpressionL2, this)
+            std::bind(&Parser::ParseExpressionL2, this)
         );
     }
 
-    auto Parser::ParsingExpressionL2() -> ExpressionPtr {
+    auto Parser::ParseExpressionL2() -> ExpressionPtr {
         Token tryToken = _lexer.LookAhead(0);
         // !
         if (tryToken.val == TokenType::TOKEN_OP_NEG) {
             Token opToken = _lexer.GetNextToken();
 
-            ExpressionPtr rExp = ParsingExpressionL1();
+            ExpressionPtr rExp = ParseExpressionL1();
 
             auto opExp = new OperationExpresson {
                 ._operator = opToken.word,
@@ -443,10 +443,10 @@ namespace begonia
             return OperationExpressonPtr(opExp);
         }
 
-        return ParsingExpressionL1();
+        return ParseExpressionL1();
     }
 
-    auto Parser::ParsingExpressionL1() -> ExpressionPtr {
+    auto Parser::ParseExpressionL1() -> ExpressionPtr {
         Token tryToken = _lexer.LookAhead(0);
         Token tryToken1;
         Token token;
@@ -454,10 +454,10 @@ namespace begonia
         {
         case TokenType::TOKEN_SEP_LPAREN: // ()
             _lexer.GetNextToken();
-            ParsingExpression();
+            ParseExpression();
             token = _lexer.GetNextToken();
             if (token.val != TokenType::TOKEN_SEP_RPAREN) {
-                ParsingError(tryToken,")");
+                ParseError(tryToken,")");
             }
             break;
 
@@ -489,7 +489,7 @@ namespace begonia
         case TokenType::TOKEN_IDENTIFIER:
             tryToken1 = _lexer.LookAhead(1);
             if (tryToken1.val == TokenType::TOKEN_SEP_LPAREN) {
-                return ParsingFuncCallExpression();
+                return ParseFuncCallExpression();
             } else {
                 token = _lexer.GetNextToken();
                 return IdentifierExpressionPtr(new IdentifierExpression{._identifier = token.word});
@@ -497,14 +497,14 @@ namespace begonia
             break;
 
         default:
-            ParsingError(tryToken,"(, false, true, nil, number, string, identifier");
+            ParseError(tryToken,"(, false, true, nil, number, string, identifier");
             return ExpressionPtr(nullptr);
             break;
         }
         return ExpressionPtr(nullptr);
     }
     
-    auto Parser::ParsingMultipleExpression() -> std::vector<ExpressionPtr>{
+    auto Parser::ParseMultipleExpression() -> std::vector<ExpressionPtr>{
         std::vector<ExpressionPtr> parameters;
         bool continueParseExp = true;
         Token tryToken;
@@ -514,7 +514,7 @@ namespace begonia
         }
 
         do {
-            ExpressionPtr exp = ParsingExpression();
+            ExpressionPtr exp = ParseExpression();
             parameters.push_back(exp);
 
             tryToken = _lexer.LookAhead(0);
@@ -528,24 +528,24 @@ namespace begonia
         return parameters;
     }
 
-    auto Parser::ParsingFuncCallExpression() -> FuncCallExpressionPtr {
+    auto Parser::ParseFuncCallExpression() -> FuncCallExpressionPtr {
         Token identifierToken = _lexer.GetNextToken();
         Token lParenToken = _lexer.GetNextToken();
         if (identifierToken.val != TokenType::TOKEN_IDENTIFIER) {
-            ParsingError(identifierToken, "identifier");
+            ParseError(identifierToken, "identifier");
             return FuncCallExpressionPtr(nullptr);
         }
         if (lParenToken.val != TokenType::TOKEN_SEP_LPAREN) {
-            ParsingError(lParenToken, "(");
+            ParseError(lParenToken, "(");
             return FuncCallExpressionPtr(nullptr);
         }
 
         std::vector<ExpressionPtr> parameters;
-        parameters = ParsingMultipleExpression();
+        parameters = ParseMultipleExpression();
 
         Token rParen = _lexer.GetNextToken();
         if (rParen.val != TokenType::TOKEN_SEP_RPAREN) { // )
-            ParsingError(rParen, ")");
+            ParseError(rParen, ")");
             return FuncCallExpressionPtr(nullptr);
         }
         auto funcallExp = new FuncCallExpression {

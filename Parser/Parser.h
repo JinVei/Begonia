@@ -90,33 +90,33 @@ namespace begonia
 
         StatementBlock _ast;
 
-        auto ParsingStatement() -> StatementPtr;
+        auto ParseStatement() -> StatementPtr;
         auto TryNextStatementType() -> StatementType;
-        auto ParsingAssignStatement() -> AssignStatementPtr;
-        auto ParsingExpression() -> ExpressionPtr;
-        auto ParsingExpressionL8() -> ExpressionPtr;
-        auto ParsingExpressionL7() -> ExpressionPtr;
-        auto ParsingExpressionL6() -> ExpressionPtr;
-        auto ParsingExpressionL5() -> ExpressionPtr;
-        auto ParsingExpressionL4() -> ExpressionPtr;
-        auto ParsingExpressionL3() -> ExpressionPtr;
-        auto ParsingExpressionL2() -> ExpressionPtr;
-        auto ParsingExpressionL1() -> ExpressionPtr;
-        // auto ParsingExpressionL0() -> ExpressionPtr;
-        auto ParsingOpExpression (std::vector<TokenType> acceptedTokenType,  OpExpPaser subExpPaeser) -> ExpressionPtr;
-        auto ParsingFuncCallExpression() -> FuncCallExpressionPtr;
-        auto ParsingSemicolon();
-        auto ParsingIfStatement() -> IfStatementPtr;
-        auto ParsingCurlyBlock() -> StatementBlock;
-        auto ParsingCallFuncStatement() -> FuncCallStatementPtr;
-        auto ParsingDefineVarStatement() -> DefVarStatementPtr;
-        auto ParsingDefineVar() -> DefVarStatementPtr;
-        auto ParsingDefineFuncStatement() -> DefFuncStatementPtr;
-        auto ParsingMultipleExpression() -> std::vector<ExpressionPtr>;
-        auto ParsingReturnStatement() -> ReturnStatementPtr;
-        auto ParsingWhileStatement() -> WhileStatementPtr;
+        auto ParseAssignStatement() -> AssignStatementPtr;
+        auto ParseExpression() -> ExpressionPtr;
+        auto ParseExpressionL8() -> ExpressionPtr;
+        auto ParseExpressionL7() -> ExpressionPtr;
+        auto ParseExpressionL6() -> ExpressionPtr;
+        auto ParseExpressionL5() -> ExpressionPtr;
+        auto ParseExpressionL4() -> ExpressionPtr;
+        auto ParseExpressionL3() -> ExpressionPtr;
+        auto ParseExpressionL2() -> ExpressionPtr;
+        auto ParseExpressionL1() -> ExpressionPtr;
+        // auto ParseExpressionL0() -> ExpressionPtr;
+        auto ParseOpExpression (std::vector<TokenType> acceptedTokenType,  OpExpPaser subExpPaeser) -> ExpressionPtr;
+        auto ParseFuncCallExpression() -> FuncCallExpressionPtr;
+        auto ParseSemicolon();
+        auto ParseIfStatement() -> IfStatementPtr;
+        auto ParseCurlyBlock() -> StatementBlock;
+        auto ParseCallFuncStatement() -> FuncCallStatementPtr;
+        auto ParseDefineVarStatement() -> DefVarStatementPtr;
+        auto ParseDefineVar() -> DefVarStatementPtr;
+        auto ParseDefineFuncStatement() -> DefFuncStatementPtr;
+        auto ParseMultipleExpression() -> std::vector<ExpressionPtr>;
+        auto ParseReturnStatement() -> ReturnStatementPtr;
+        auto ParseWhileStatement() -> WhileStatementPtr;
     public:
-        void Parsing();
+        void Parse();
     };
 
 }
