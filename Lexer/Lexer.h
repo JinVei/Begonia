@@ -7,11 +7,8 @@
 
 namespace begonia
 {
-    using token_t = uint16_t;
-
-    // TODO: naming notations.TokenType
-    //enum class TokenType: token_t
-    enum class TokenType: token_t
+    using token_size = uint16_t;
+    enum class TokenType: token_size
     {
         TOKEN_SEP_EOF			= 0,
         TOKEN_SEP_SEMICOLON,	// ;
@@ -66,11 +63,10 @@ namespace begonia
 
     struct Token
     {
-        TokenType	val;
-        long 		line;
-        std::string	word;
-        // TODO
-        std::string	file_name_;
+        TokenType   val;
+        long        line;
+        std::string word;
+        std::string file_name;
     };
 
     class Lexer
@@ -92,25 +88,28 @@ namespace begonia
         void Interrupt(std::string);
 
         Token NextToken();
+
+        void initKeyWord();
+
     public:
         ~Lexer();
-        Lexer(std::string fileName);
+        Lexer(std::string file_name);
         Token GetNextToken();
         Token LookAhead(size_t step);
 
-    private:
-        std::ifstream		_sourceStream;
-        std::string			_sourceFileName;
-        std::size_t			_currentLineOffset = 0;
-        long				_currentLine = 0;
-        bool				_isReady;
-        Token				_nextToken;
-        uint8_t				_acceptableCharacterTable[256] = {0};
-        std::vector<Token>	_tokens;
-        size_t				_tokenIndex = 0;
-    };
+        std::map<std::string, TokenType>    key_word_type_;
+        std::map<TokenType, std::string>    key_word_;
 
-    extern const std::map<std::string, TokenType>	KEY_WORD;
-    extern std::map<TokenType, std::string>			KEY_WORD_TYPE;
+    private:
+        std::ifstream       source_;
+        std::string         src_file_name_;
+        std::size_t         current_line_offset_ = 0;
+        long                current_line_ = 0;
+        bool                is_ready_;
+        Token               next_token_;
+        uint8_t             acceptable_Chars_[256] = {0};
+        std::vector<Token>  tokens_;
+        size_t              token_index_ = 0;
+    };
 }
 #endif

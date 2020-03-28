@@ -29,36 +29,46 @@ exp2 := !exp1 | exp1
 exp1 :=  '(' exp8 ')' | nil | false | true | number | string | identifier | funcallStat
 */
 
-#include "Lexer.h"
-#include "Statement.h"
-#include "Expression.h"
+#include "lexer.h"
+#include "statement.h"
+#include "expression.h"
+#include <functional>
 
 namespace begonia
 {
-    enum class StatementType: uint8_t {
-        IF_STAT = 0,
-        DEF_VAR_STAT,
-        DEF_FUNC_STAT,
-        ASSIGN_STAT,
-        WHILE_STAT,
-        RETURN_STAT,
-        CALL_FUNC_STAT,
-        UNKNOWN_STAT,
-    };
-
     using OpExpPaser = std::function<ExpressionPtr ()>;
+    using StatementParser = std::map<StatementType, std::function<StatementPtr (void)> >;
+
     class Parser {
     public:
-        Parser(std::string sourcePath);
+        Parser(std::string source_file);
         void Parse();
+        StatementBlock      _ast;
+
     private:
-        Lexer _lexer;
+        Lexer               _lexer;
+        StatementParser     _statement_parsers;
 
-        StatementBlock _ast;
-
+    private:
         auto ParseStatement()       -> StatementPtr;
         auto TryNextStatementType() -> StatementType;
         auto ParseAssignStatement() -> AssignStatementPtr;
+
+        auto ParseFuncCallExpression()  -> FuncCallExpressionPtr;
+        auto ParseSemicolon();
+        auto ParseIfStatement()         -> IfStatementPtr;
+        auto ParseCurlyBlock()          -> StatementBlock;
+        auto ParseCallFuncStatement()   -> FuncCallStatementPtr;
+        auto ParseDeclarVarStatement()  -> DeclarVarStatementPtr;
+        auto ParseDeclarVar()           -> DeclarVarStatementPtr;
+        auto ParseDeclarFuncStatement() -> DeclarFuncStatementPtr;
+        auto ParseMultipleExpression()  -> std::vector<ExpressionPtr>;
+        auto ParseReturnStatement()     -> ReturnStatementPtr;
+        auto ParseWhileStatement()      -> WhileStatementPtr;
+
+        void ParseError(Token token, std::string expected_word);
+        void initStatementParser();
+
         auto ParseExpression()      -> ExpressionPtr;
         auto ParseExpressionL8()    -> ExpressionPtr;
         auto ParseExpressionL7()    -> ExpressionPtr;
@@ -68,23 +78,11 @@ namespace begonia
         auto ParseExpressionL3()    -> ExpressionPtr;
         auto ParseExpressionL2()    -> ExpressionPtr;
         auto ParseExpressionL1()    -> ExpressionPtr;
-        // auto ParseExpressionL0() -> ExpressionPtr;
+
         ExpressionPtr
-        ParseOpExpression ( std::vector<TokenType>  acceptedTokenType,
-                            OpExpPaser              subExpPaeser);
+        ParseOpExpression ( std::vector<TokenType>  accepted_token_type,
+                            OpExpPaser              sub_exp_paeser);
 
-        auto ParseFuncCallExpression()  -> FuncCallExpressionPtr;
-        auto ParseSemicolon();
-        auto ParseIfStatement()         -> IfStatementPtr;
-        auto ParseCurlyBlock()          -> StatementBlock;
-        auto ParseCallFuncStatement()   -> FuncCallStatementPtr;
-        auto ParseDefineVarStatement()  -> DefVarStatementPtr;
-        auto ParseDefineVar()           -> DefVarStatementPtr;
-        auto ParseDefineFuncStatement() -> DefFuncStatementPtr;
-        auto ParseMultipleExpression()  -> std::vector<ExpressionPtr>;
-        auto ParseReturnStatement()     -> ReturnStatementPtr;
-        auto ParseWhileStatement()      -> WhileStatementPtr;
     };
-
 }
 #endif
