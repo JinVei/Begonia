@@ -43,7 +43,7 @@ static void InitializeModuleAndPassManager() {
   // Open a new module.
   TheModule = std::make_unique<llvm::Module>("my cool jit", TheContext);
 }
-
+void MainFuncCodegen();
 int demo(){
     llvm::InitializeAllTargetInfos();
     llvm::InitializeAllTargets();
@@ -95,6 +95,7 @@ int demo(){
   dest.flush();
 
   llvm::outs() << "Wrote " << Filename << "\n";
+  MainFuncCodegen();
 
     return 0;
 }
@@ -195,6 +196,10 @@ void MainFuncCodegen(){
 
     // Validate the generated code, checking for consistency.
     llvm::verifyFunction(*F);
+    int retcode = system("llc file.ll -filetype=obj -o file.o");
+    llvm::outs() << retcode << "\n";
+    retcode = system("ld -o test ./file.o ./output.o  -lSystem -macosx_version_min 10.14");
+    llvm::outs() << retcode << "\n";
 
 }
 //Builder.CreateCall
