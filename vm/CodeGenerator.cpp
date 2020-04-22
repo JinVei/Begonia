@@ -33,12 +33,25 @@
 #include <vector>
 //using namespace llvm;
 
+static llvm::LLVMContext TheContext;
+static llvm::IRBuilder<> Builder(TheContext);
+static std::unique_ptr<llvm::Module> TheModule;
+static std::map<std::string, llvm::AllocaInst *> NamedValues;
+//static std::map<std::string, std::unique_ptr<llvm::PrototypeAST>> FunctionProtos;
+
+static void InitializeModuleAndPassManager() {
+  // Open a new module.
+  TheModule = std::make_unique<llvm::Module>("my cool jit", TheContext);
+}
+
 int demo(){
     llvm::InitializeAllTargetInfos();
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmParsers();
     llvm::InitializeAllAsmPrinters();
+
+    InitializeModuleAndPassManager();
 
     auto TargetTriple = llvm::sys::getDefaultTargetTriple();
     std::string Error;
@@ -51,15 +64,143 @@ int demo(){
         llvm::errs() << Error;
         return 1;
     }
-
-    std::unique_ptr<llvm::Module> TheModule;
     auto CPU = "generic";
     auto Features = "";
 
     llvm::TargetOptions opt;
     auto RM = llvm::Optional<llvm::Reloc::Model>();
     auto TargetMachine = Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
-    TheModule->setDataLayout(TargetMachine->createDataLayout());
+    auto layout = TargetMachine->createDataLayout();
+    TheModule->setDataLayout(layout);
     TheModule->setTargetTriple(TargetTriple);
 
+    auto Filename = "output.o";
+  std::error_code EC;
+  llvm::raw_fd_ostream dest(Filename, EC, llvm::sys::fs::OF_None);
+  
+  if (EC) {
+    llvm::errs() << "Could not open file: " << EC.message();
+    return 1;
+  }
+
+  llvm::legacy::PassManager pass;
+  auto FileType = llvm::TargetMachine::CGFT_ObjectFile;
+
+  if (TargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType)) {
+    llvm::errs() << "TheTargetMachine can't emit a file of this type";
+    return 1;
+  }
+
+  pass.run(*TheModule);
+  dest.flush();
+
+  llvm::outs() << "Wrote " << Filename << "\n";
+
+    return 0;
 }
+
+void buildPrint(){
+    // llvm::Type* voidType[1];
+    // voidType[0] = llvm::Type::getVoidTy(TheContext);
+    // llvm::ArrayRef<llvm::Type*> voidTypeARef (voidType, 1);
+
+    // llvm::FunctionType* signature = llvm::FunctionType::get(voidTypeARef, false);
+    // llvm::Function* func = llvm::Function::Create(signature, llvm::Function::ExternalLinkage, "fun", TheModule);
+    // TheExecutionEngine->addGlobalMapping(func, const_cast<void*>(fnPtr));
+    // llvm::Function *FuncToCall= TheModule->getFunction("fun");
+    // std::vector<llvm::Value*> Args; // This is empty since void parameters of function
+    // llvm::Value *Result = Builder.CreateCall(FuncToCall, Args, "calltmp"); // Result is void
+}
+
+int main() {
+    demo();
+}
+
+llvm::Function* PrototypeCodegen(){
+    std::vector<llvm::Type *> Doubles(2/* Args.size()*/, llvm::Type::getDoubleTy(TheContext));
+    llvm::FunctionType *FT =
+        llvm::FunctionType::get(llvm::Type::getDoubleTy(TheContext), Doubles, false);
+
+    llvm::Function *F =
+        llvm::Function::Create(FT, llvm::Function::ExternalLinkage, "Name", TheModule.get());
+
+    // Set names for all arguments.
+    unsigned Idx = 0;
+    for (auto &Arg : F->args())
+        Arg.setName(/* Args[Idx++]*/"arg name idx");
+
+    return F;
+}
+
+/// CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
+/// the function.  This is used for mutable variables etc.
+static llvm::AllocaInst *CreateEntryBlockAlloca(llvm::Function *TheFunction,
+                                          llvm::StringRef VarName) {
+  llvm::IRBuilder<> TmpB(&TheFunction->getEntryBlock(),
+                   TheFunction->getEntryBlock().begin());
+  return TmpB.CreateAlloca(llvm::Type::getDoubleTy(TheContext), nullptr, VarName);
+}
+
+llvm::Function* FunctionCodegen(){
+    auto TheFunction = PrototypeCodegen();
+    llvm::BasicBlock *BB = llvm::BasicBlock::Create(TheContext, "entry", TheFunction);
+    Builder.SetInsertPoint(BB);
+
+      NamedValues.clear();
+  for (auto &Arg : TheFunction->args()) {
+    // Create an alloca for this variable.
+    llvm::AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, Arg.getName());
+
+    // Store the initial value into the alloca.
+    Builder.CreateStore(&Arg, Alloca);
+
+    // Add arguments to variable symbol table.
+    NamedValues[std::string(Arg.getName())] = Alloca;
+  }
+    //Body = statementCodegen or expressionCodegen
+  //if (llvm::Value *RetVal = Body->codegen()) {
+    if (llvm::Value *RetVal = nullptr) {
+    // Finish off the function.
+    Builder.CreateRet(RetVal);
+
+    // Validate the generated code, checking for consistency.
+    verifyFunction(*TheFunction);
+
+    return TheFunction;
+  }
+    // Error reading body, remove function.
+  TheFunction->eraseFromParent();
+    return nullptr;
+
+}
+void MainFuncCodegen(){
+    // declar printf
+    // define void main (void)
+    //  call print(len, str)
+    //   return 
+
+    std::vector<llvm::Type *> void_param(1, llvm::Type::getVoidTy(TheContext));
+    llvm::FunctionType *FT =
+        llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext), void_param, false);
+
+    llvm::Function *F =
+        llvm::Function::Create(FT, llvm::Function::ExternalLinkage, "main", TheModule.get());
+
+    llvm::BasicBlock *BB = llvm::BasicBlock::Create(TheContext, "entry", F);
+    Builder.SetInsertPoint(BB);
+
+    auto RetVal = llvm::UndefValue::get(llvm::Type::getVoidTy(TheContext));
+
+    Builder.CreateRet(RetVal);
+
+    // Validate the generated code, checking for consistency.
+    llvm::verifyFunction(*F);
+
+}
+//Builder.CreateCall
+
+// llvm::SMDiagnostic Err;
+// unique_ptr<Module> Mod = getLazyIRFileModule("f.ll", Err, TheContext);
+// llvm::EngineBuilder engineBuilder(std::move(Mod));
+
+// clang++ CodeGenerator.cpp -o CodeGenerator -L/usr/local/opt/llvm/lib -Wl,-rpath,/usr/local/opt/llvm/lib `llvm-config --cxxflags --ldflags --system-libs --libs all` -std=c++17
