@@ -30,12 +30,11 @@ module asm "        ret"
 declare void @print(i64, i8*)
 declare void @exit()
 
-define i32 @main() {
+define void @mock_print() {
 start:
   %cast210 = getelementptr [16 x i8], [16 x i8]* @.str, i64 0, i64 0
-  call void @exit()
   call void @print(i64 10, i8* %cast210)
-  ret i32 0
+  ret void
 }
 
 ;llc file.ll -filetype=obj -o file.o

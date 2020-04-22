@@ -90,12 +90,22 @@ int demo(){
     llvm::errs() << "TheTargetMachine can't emit a file of this type";
     return 1;
   }
+  
+  MainFuncCodegen();
 
   pass.run(*TheModule);
   dest.flush();
 
   llvm::outs() << "Wrote " << Filename << "\n";
-  MainFuncCodegen();
+
+    int retcode = system("llc file.ll -filetype=obj -o file.o");
+    if (retcode != 0) 
+        return 1;
+    retcode = system("ld -o test ./file.o ./output.o  -lSystem -macosx_version_min 10.14");
+    if (retcode != 0) 
+        return 1;
+
+    TheModule->print(llvm::errs(), nullptr);
 
     return 0;
 }
@@ -180,7 +190,14 @@ void MainFuncCodegen(){
     //  call print(len, str)
     //   return 
 
-    std::vector<llvm::Type *> void_param(1, llvm::Type::getVoidTy(TheContext));
+    std::vector<llvm::Type *> void_param(0, llvm::Type::getVoidTy(TheContext));
+    llvm::FunctionType *mockPrintFT =
+        llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext), void_param, false);
+
+    llvm::Function *mockPrintF =
+        llvm::Function::Create(mockPrintFT, llvm::Function::ExternalLinkage, "mock_print", TheModule.get());
+
+    //std::vector<llvm::Type *> void_param(0, llvm::Type::getVoidTy(TheContext));
     llvm::FunctionType *FT =
         llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext), void_param, false);
 
@@ -189,17 +206,17 @@ void MainFuncCodegen(){
 
     llvm::BasicBlock *BB = llvm::BasicBlock::Create(TheContext, "entry", F);
     Builder.SetInsertPoint(BB);
+    llvm::IRBuilder<> blockbBuilder(BB);
+    std::vector<llvm::Value*> emptyArgs;
+    blockbBuilder.CreateCall(mockPrintF, llvm::makeArrayRef(emptyArgs));
 
-    auto RetVal = llvm::UndefValue::get(llvm::Type::getVoidTy(TheContext));
+    //auto RetVal = llvm::UndefValue::get(llvm::Type::getVoidTy(TheContext));
+    auto RetVal = Builder.CreateRetVoid();
 
-    Builder.CreateRet(RetVal);
+    //Builder.CreateRet(RetVal);
 
     // Validate the generated code, checking for consistency.
     llvm::verifyFunction(*F);
-    int retcode = system("llc file.ll -filetype=obj -o file.o");
-    llvm::outs() << retcode << "\n";
-    retcode = system("ld -o test ./file.o ./output.o  -lSystem -macosx_version_min 10.14");
-    llvm::outs() << retcode << "\n";
 
 }
 //Builder.CreateCall
