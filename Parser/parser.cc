@@ -1,67 +1,103 @@
 #include "Parser.h"
 #include "iostream"
-
+// TODO: KW_DOUBLE KW_INT KW_FALSE KW_TRUE KW_STRING
+// TODO: parser expr in body
 namespace begonia
 {
     void Parser::initStatementParser() {
-        _statement_parsers[StatementType::IF_STATEMENT]        = std::bind(&Parser::ParseIfStatement,this);
-        _statement_parsers[StatementType::ASSIGN_STATEMENT]    = std::bind(&Parser::ParseAssignStatement,this);
-        _statement_parsers[StatementType::CALL_FUNC_STATEMENT] = std::bind(&Parser::ParseCallFuncStatement,this);
-        _statement_parsers[StatementType::DECL_FUNC_STATEMENT] = std::bind(&Parser::ParseDeclarFuncStatement,this);
-        _statement_parsers[StatementType::DECL_VAR_STATEMENT]  = std::bind(&Parser::ParseDeclarVarStatement,this);
-        _statement_parsers[StatementType::RETURN_STATEMENT]    = std::bind(&Parser::ParseReturnStatement,this);
-        _statement_parsers[StatementType::WHILE_STATEMENT]     = std::bind(&Parser::ParseWhileStatement,this);
+        _statement_parsers[AstType::IfStatement]        = std::bind(&Parser::ParseIfStatement,this);
+        _statement_parsers[AstType::AssignStatement]    = std::bind(&Parser::ParseAssignStatement,this);
+        _statement_parsers[AstType::DeclarFuncStatement] = std::bind(&Parser::ParseDeclarFuncStatement,this);
+        _statement_parsers[AstType::DeclarVarStatement]  = std::bind(&Parser::ParseDeclarVarStatement,this);
+        _statement_parsers[AstType::RetStatement]       = std::bind(&Parser::ParseReturnStatement,this);
+        _statement_parsers[AstType::WhileStatement]     = std::bind(&Parser::ParseWhileStatement,this);
+        _statement_parsers[AstType::Expr]               = std::bind(&Parser::ParseExpressionStatement,this);
     }
 
     Parser::Parser(std::string sourcePath): _lexer(sourcePath) {
         initStatementParser();
     }
 
-    auto Parser::TryNextStatementType() -> StatementType {
+    bool isExprToken(TokenType type){
+        return type == TokenType::TOKEN_KW_FALSE
+            || type == TokenType::TOKEN_KW_NIL
+            || type == TokenType::TOKEN_KW_TRUE
+            || type == TokenType::TOKEN_NUMBER
+            || type == TokenType::TOKEN_OP_ADD
+            || type == TokenType::TOKEN_OP_AND
+            || type == TokenType::TOKEN_OP_BAND
+            || type == TokenType::TOKEN_OP_BOR
+            || type == TokenType::TOKEN_OP_DIV
+            || type == TokenType::TOKEN_OP_EQ
+            || type == TokenType::TOKEN_OP_GE
+            || type == TokenType::TOKEN_OP_GT
+            || type == TokenType::TOKEN_OP_LE
+            || type == TokenType::TOKEN_OP_LT
+            || type == TokenType::TOKEN_OP_MOD
+            || type == TokenType::TOKEN_OP_MUL
+            || type == TokenType::TOKEN_OP_NEG
+            || type == TokenType::TOKEN_OP_NEQ
+            || type == TokenType::TOKEN_OP_OR
+            || type == TokenType::TOKEN_OP_SUB
+            || type == TokenType::TOKEN_OP_XOR
+            || type == TokenType::TOKEN_STRING;
+    }
+
+    auto Parser::TryNextStatementType() -> AstType {
         Token token = _lexer.LookAhead(0);
         Token token2 = _lexer.LookAhead(1);
 
         switch (token.val) {
         case TokenType::TOKEN_KW_IF:
-            return StatementType::IF_STATEMENT;
+            return AstType::IfStatement;
 
         case TokenType::TOKEN_KW_VAR:
-            return StatementType::DECL_VAR_STATEMENT;
+            return AstType::DeclarVarStatement;
 
         case TokenType::TOKEN_KW_FUNC:
-            return StatementType::DECL_FUNC_STATEMENT;
+            return AstType::DeclarFuncStatement;
 
         case TokenType::TOKEN_IDENTIFIER:
             if (token2.val == TokenType::TOKEN_OP_ASSIGN) {
-                return StatementType::ASSIGN_STATEMENT;
+                return AstType::AssignStatement;
             }
             else if (token2.val == TokenType::TOKEN_SEP_LPAREN) {
-                return StatementType::CALL_FUNC_STATEMENT;
+                //return AstType::FuncCallExpr;
+                return AstType::Expr;
+            }
+            else if(isExprToken(token2.val)){
+                return AstType::Expr;
             }
             else {
-                return StatementType::UNKNOWN_STATEMENT;
+                return AstType::Unknown;
             }
 
         case TokenType::TOKEN_KW_WHILE:
-            return StatementType::WHILE_STATEMENT;
+            return AstType::WhileStatement;
 
         case TokenType::TOKEN_KW_RETURN:
-            return StatementType::RETURN_STATEMENT;
+            return AstType::RetStatement;
+            
+        case TokenType::TOKEN_SEP_LPAREN:
+            return AstType::Expr;
 
         default:
+            if(isExprToken(token2.val)){
+                return AstType::Expr;
+            }
             ParseError(token, "UNKNOWN_STATEMENT");
-            return StatementType::UNKNOWN_STATEMENT;
+            return AstType::Unknown;
 
         }
     }
 
-    auto Parser::ParseStatement() -> StatementPtr {
-        StatementType statement_type = TryNextStatementType();
-        if (statement_type == StatementType::UNKNOWN_STATEMENT) {
+    auto Parser::ParseStatement() -> AstPtr {
+        AstType statement_type = TryNextStatementType();
+        if (statement_type == AstType::Unknown) {
             exit(1);
         }
         auto statement_parser = _statement_parsers[statement_type];
-        StatementPtr statement = statement_parser();
+        AstPtr statement = statement_parser();
         return statement;
     }
 
@@ -69,7 +105,7 @@ namespace begonia
         do {
             Token try_token = _lexer.LookAhead(0);
             if (try_token.val != TokenType::TOKEN_SEP_EOF){
-                StatementPtr statement = ParseStatement();
+                AstPtr statement = ParseStatement();
                 _ast.push_back(statement);
             } else {
                 break;
@@ -83,27 +119,26 @@ namespace begonia
         exit(1);
     }
 
-    auto Parser::ParseCurlyBlock() -> StatementBlock {
+    auto Parser::ParseCurlyBlock() -> AstBlock {
         Token lcurly_token = _lexer.GetNextToken();
         if (lcurly_token.val != TokenType::TOKEN_SEP_LCURLY) {
             ParseError(lcurly_token, "{");
-            return StatementBlock();
+            return AstBlock{};
         }
-        StatementBlock block;
-        Statement statement;
+        AstBlock block;
         do {
             Token try_token = _lexer.LookAhead(0);
             if (try_token.val == TokenType::TOKEN_SEP_RCURLY) {
                 break;
             }
-            StatementPtr statement = ParseStatement();
+            AstPtr statement = ParseStatement();
             block.push_back(statement);
         } while(1);
 
         Token rcurly_token = _lexer.GetNextToken();
         if (rcurly_token.val != TokenType::TOKEN_SEP_RCURLY) {
             ParseError(rcurly_token, "}");
-            return StatementBlock();
+            return AstBlock{};
         }
         
         return block;
@@ -124,7 +159,7 @@ namespace begonia
         }
 
         ExpressionPtr cond_exp = ParseExpression();
-        StatementBlock block = ParseCurlyBlock();
+        AstBlock block = ParseCurlyBlock();
 
         auto statement = new WhileStatement(cond_exp, block);
         return WhileStatementPtr(statement);
@@ -175,22 +210,36 @@ namespace begonia
             DeclarVarStatementPtr defVar = ParseDeclarVar();
             decl_vars.push_back(defVar);
 
-            Token try_token = _lexer.GetNextToken();
-            if (try_token.val == TokenType::TOKEN_SEP_COMMA) {// ,
+            Token next_token = _lexer.GetNextToken();
+            if (next_token.val == TokenType::TOKEN_SEP_COMMA) {// ,
                 continue_parse_paremeter = true;
-            } else if (try_token.val == TokenType::TOKEN_SEP_RPAREN) { // )
+            } else if (next_token.val == TokenType::TOKEN_SEP_RPAREN) { // )
                 continue_parse_paremeter = false;
             } else {
-                ParseError(try_token, ", )");
+                ParseError(next_token, ", )");
                 return DeclarFuncStatementPtr(nullptr);
             }
         } 
 
-        StatementBlock block = ParseCurlyBlock();
+        //return type
+        Token ret_type = _lexer.GetNextToken();
+        if (ret_type.val != TokenType::TOKEN_IDENTIFIER) {
+            ParseError(ret_type, "Need return type ");
+            return DeclarFuncStatementPtr(nullptr);
+        }
+
+        AstBlock block;
+        Token try_token = _lexer.LookAhead(0);
+        if (try_token.val == TokenType::TOKEN_SEP_SEMICOLON) {
+            _lexer.GetNextToken();
+        } else {
+            block = ParseCurlyBlock();
+        }
 
         auto defFuncStat = new DeclarFuncStatement(
             identifier_token.word,
             decl_vars,
+            ret_type.word,
             block
         );
 
@@ -199,52 +248,69 @@ namespace begonia
     }
 
     auto Parser::ParseDeclarVar() -> DeclarVarStatementPtr {
-        Token var_kw = _lexer.GetNextToken();
         Token var_name = _lexer.GetNextToken();
-
-        if (var_kw.val != TokenType::TOKEN_KW_VAR) {
-            ParseError(var_kw, "var");
-            return DeclarVarStatementPtr(nullptr);
-        }
 
         if (var_name.val != TokenType::TOKEN_IDENTIFIER) {
             ParseError(var_name, "identifier");
             return DeclarVarStatementPtr(nullptr);
         }
+        // var type
+        std::string type = "";
         Token try_token = _lexer.LookAhead(0);
+        if (try_token.val == TokenType::TOKEN_IDENTIFIER) {
+            type = try_token.word;
+            _lexer.GetNextToken(); // pass type
+        }
+        // =
+        try_token = _lexer.LookAhead(0);
         if (try_token.val != TokenType::TOKEN_OP_ASSIGN) {
-            auto decl_var = new DeclarVarStatement (
-                var_name.word,
-                nullptr
-            );
-            return DeclarVarStatementPtr(decl_var);
+            if (type != "") {
+                auto decl_var = new DeclarVarStatement (
+                    var_name.word,
+                    type,
+                    nullptr
+                );
+                return DeclarVarStatementPtr(decl_var);
+            } else {
+                ParseError(var_name, std::string("Can't not infer type of the variable:") + var_name.word);
+                return DeclarVarStatementPtr(nullptr);
+            }
         }
         _lexer.GetNextToken(); // =
         ExpressionPtr exp = ParseExpression();
 
         auto decl_var = new DeclarVarStatement (
             var_name.word,
+            type,
             exp
         );
         return DeclarVarStatementPtr(decl_var);
     }
 
     auto Parser::ParseDeclarVarStatement() -> DeclarVarStatementPtr {
+        Token var_kw = _lexer.GetNextToken();
+        if (var_kw.val != TokenType::TOKEN_KW_VAR) {
+            ParseError(var_kw, "var");
+            return DeclarVarStatementPtr(nullptr);
+        }
+
         DeclarVarStatementPtr statement = ParseDeclarVar();
         ParseSemicolon();
 
         return statement;
     }
 
-    auto Parser::ParseCallFuncStatement() -> FuncCallStatementPtr {
-        FuncCallExpressionPtr func_call_exp = ParseFuncCallExpression();
+    auto Parser::ParseExpressionStatement() -> ExpressionPtr {
+        //FuncCallExpressionPtr func_call_exp = ParseFuncCallExpression();
+        ExpressionPtr expr = ParseExpression();
         ParseSemicolon();
         
-        auto funcall_statement = new FuncCallStatement (
-            func_call_exp->_identifier,
-            func_call_exp->_parameters
-        );
-        return FuncCallStatementPtr(funcall_statement);
+        // auto funcall_statement = new FuncCallStatement (
+        //     func_call_exp->_identifier,
+        //     func_call_exp->_parameters
+        // );
+        // return FuncCallStatementPtr(funcall_statement);
+        return expr;
             
     }
     
@@ -276,11 +342,11 @@ namespace begonia
         }
 
         std::list<IfBlock> if_blocks;
-        StatementBlock else_block;
+        AstBlock else_block;
 
         ExpressionPtr if_cond_exp = ParseExpression();
 
-        StatementBlock block = ParseCurlyBlock();
+        AstBlock block = ParseCurlyBlock();
         if_blocks.push_back(IfBlock{block, if_cond_exp});
 
         bool continue_parse_elif_block = true;
@@ -289,7 +355,7 @@ namespace begonia
             if (try_token.val == TokenType::TOKEN_KW_ELSEIF) {
                 Token elif_token = _lexer.GetNextToken();
                 ExpressionPtr cond_exp = ParseExpression();
-                StatementBlock block = ParseCurlyBlock();
+                AstBlock block = ParseCurlyBlock();
                 if_blocks.push_back(IfBlock{block, cond_exp});
 
             } else if (try_token.val == TokenType::TOKEN_KW_ELSE) {

@@ -1,8 +1,11 @@
 
 
 var kelo = 1;
+var meiko str;
 
-func name (var a) {
+func name (a int) void;
+
+func name (a int) void {
     kelo = (1+2-3*90/10&da)^90|oi&10;
 }
 name3();
@@ -13,7 +16,7 @@ if no {
     return r1;
 }
 
-func testWhile(var uk="q") 
+func testWhile(uk="q") int
 {
     his_6name1 = ho;
     exit = false;

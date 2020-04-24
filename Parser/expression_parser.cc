@@ -34,11 +34,7 @@ namespace begonia {
             Token operator_token = _lexer.GetNextToken();
             ExpressionPtr rexp = subExpPaeser();
             // std::cout << opToken.word;
-            auto operation_exp = new OperationExpresson {
-                ._operator = operator_token.word,
-                ._lexp = exp,
-                ._rexp = rexp
-            };
+            auto operation_exp = new OperationExpresson(operator_token.word, exp, rexp);
             exp = ExpressionPtr(operation_exp);
         }
 
@@ -98,11 +94,7 @@ namespace begonia {
 
             ExpressionPtr rExp = ParseExpressionL1();
 
-            auto opExp = new OperationExpresson {
-                ._operator = operator_token.word,
-                ._lexp = nullptr,
-                ._rexp = rExp
-            };
+            auto opExp = new OperationExpresson(operator_token.word, nullptr, rExp);
             return OperationExpressonPtr(opExp);
         }
 
@@ -126,12 +118,12 @@ namespace begonia {
 
         case TokenType::TOKEN_KW_FALSE:
             token = _lexer.GetNextToken();
-            return BoolExpressionPtr(new BoolExpression{._value = false});
+            return BoolExpressionPtr(new BoolExpression{false});
             break;
 
         case TokenType::TOKEN_KW_TRUE:
             token = _lexer.GetNextToken();
-            return BoolExpressionPtr(new BoolExpression{._value = true});
+            return BoolExpressionPtr(new BoolExpression{true});
             break;
         
         case TokenType::TOKEN_KW_NIL:
@@ -141,12 +133,12 @@ namespace begonia {
 
         case TokenType::TOKEN_NUMBER:
             token = _lexer.GetNextToken();
-            return NumberExpressionPtr(new NumberExpression{._number = std::stod(token.word)});
+            return NumberExpressionPtr(new NumberExpression{std::stod(token.word)});
             break;
 
         case TokenType::TOKEN_STRING:
             token = _lexer.GetNextToken();
-            return StringExpressionPtr(new StringExpression{._string = token.word});
+            return StringExpressionPtr(new StringExpression{token.word});
             break;
 
         case TokenType::TOKEN_IDENTIFIER:
@@ -155,7 +147,7 @@ namespace begonia {
                 return ParseFuncCallExpression();
             } else {
                 token = _lexer.GetNextToken();
-                return IdentifierExpressionPtr(new IdentifierExpression{._identifier = token.word});
+                return IdentifierExpressionPtr(new IdentifierExpression{token.word});
             }
             break;
 
@@ -211,10 +203,7 @@ namespace begonia {
             ParseError(rparen, ")");
             return FuncCallExpressionPtr(nullptr);
         }
-        auto funcallExp = new FuncCallExpression {
-            ._identifier = id_token.word,
-            ._parameters = parameters
-        };
+        auto funcallExp = new FuncCallExpression {id_token.word, parameters};
 
         return FuncCallExpressionPtr(funcallExp);
         

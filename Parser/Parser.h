@@ -2,15 +2,15 @@
 #define BEGONIA_PARSER_H
 // TODO: import, table, for
 /*
-block := {Stat | CallFuncExp}
-stat :=   [IfStat]
+block := {Statement}
+Statement := [IfStat]
         | [DeclarVarStat]
         | [DeclarFuncStat]
         | [AssignStat]
         | [ForStat]
         | [WhileStat]
         | [RetStat]
-        | CallFuncStat
+        | [ExprStat]
 
 IfStat          := if exp '{' block '}' [elif exp '{' block '}'] [else '{' block '}'] 
 DeclarVarStat   := var identifier ['=' exp] ;
@@ -18,6 +18,7 @@ DeclarFuncStat  := func identifier '(' () | (exp [',' exp])  ')' '{' block '}' ;
 AssignStat      := identifier '=' exp ;
 WhileStat       := while exp '{' block '}' 
 RetStat         := return | return exp ["," exp];
+ExprStat        := exp;
 
 exp  := exp7 {('||') exp7}
 exp7 := exp6 {(&&) exp6}
@@ -37,28 +38,28 @@ exp1 :=  '(' exp8 ')' | nil | false | true | number | string | identifier | func
 namespace begonia
 {
     using OpExpPaser = std::function<ExpressionPtr ()>;
-    using StatementParser = std::map<StatementType, std::function<StatementPtr (void)> >;
+    using StatementParser = std::map<AstType, std::function<AstPtr (void)> >;
 
     class Parser {
     public:
         Parser(std::string source_file);
         void Parse();
-        StatementBlock      _ast;
+        AstBlock      _ast;
 
     private:
         Lexer               _lexer;
         StatementParser     _statement_parsers;
 
     private:
-        auto ParseStatement()       -> StatementPtr;
-        auto TryNextStatementType() -> StatementType;
+        auto ParseStatement()       -> AstPtr;
+        auto TryNextStatementType() -> AstType;
         auto ParseAssignStatement() -> AssignStatementPtr;
 
         auto ParseFuncCallExpression()  -> FuncCallExpressionPtr;
         auto ParseSemicolon();
         auto ParseIfStatement()         -> IfStatementPtr;
-        auto ParseCurlyBlock()          -> StatementBlock;
-        auto ParseCallFuncStatement()   -> FuncCallStatementPtr;
+        auto ParseCurlyBlock()          -> AstBlock;
+        auto ParseExpressionStatement() -> ExpressionPtr;
         auto ParseDeclarVarStatement()  -> DeclarVarStatementPtr;
         auto ParseDeclarVar()           -> DeclarVarStatementPtr;
         auto ParseDeclarFuncStatement() -> DeclarFuncStatementPtr;
@@ -66,7 +67,7 @@ namespace begonia
         auto ParseReturnStatement()     -> ReturnStatementPtr;
         auto ParseWhileStatement()      -> WhileStatementPtr;
 
-        void ParseError(Token token, std::string expected_word);
+        static void ParseError(Token token, std::string expected_word);
         void initStatementParser();
 
         auto ParseExpression()      -> ExpressionPtr;

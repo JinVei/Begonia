@@ -1,6 +1,6 @@
 
-var lexerTest = 89;
-func test()
+var lexerTest int = 89;
+func test() retType
 {
 	if lexerTest != 0 {
 		lexerTest = 100

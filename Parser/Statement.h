@@ -1,63 +1,72 @@
 #ifndef BEGONIA_STATEMENT_H
 #define BEGONIA_STATEMENT_H
+#include "expression.h"
+#include "ast.h"
+
 #include <vector>
 #include <memory>
 #include <list>
-#include "expression.h"
 
 namespace begonia
 {
-    enum class StatementType: uint8_t {
-        IF_STATEMENT = 0,
-        DECL_VAR_STATEMENT,
-        DECL_FUNC_STATEMENT,
-        ASSIGN_STATEMENT,
-        WHILE_STATEMENT,
-        RETURN_STATEMENT,
-        CALL_FUNC_STATEMENT,
-        UNKNOWN_STATEMENT,
-    };
+    // enum class StatementType: uint8_t {
+    //     IF_STATEMENT = 0,
+    //     DECL_VAR_STATEMENT,
+    //     DECL_FUNC_STATEMENT,
+    //     ASSIGN_STATEMENT,
+    //     WHILE_STATEMENT,
+    //     RETURN_STATEMENT,
+    //     CALL_FUNC_STATEMENT,
+    //     UNKNOWN_STATEMENT,
+    // };
 
-    struct Statement {
-        virtual StatementType GetType() {
-            return StatementType::UNKNOWN_STATEMENT;
-        }
+    struct Statement: virtual public AST {
+        // virtual StatementType GetType() {
+        //     return StatementType::UNKNOWN_STATEMENT;
+        // }
     };
 
     using StatementPtr = std::shared_ptr<Statement>;
 
-    using StatementBlock = std::vector<StatementPtr>;
+    struct AstBlock: virtual public AST, public std::vector<AstPtr> {
+        AstType GetType() override {
+            return AstType::Block;
+        }
+    };
+    //using StatementBlock = std::vector<StatementPtr>;
 
     struct IfBlock {
-        StatementBlock      _block;
+        AstBlock            _block;
         ExpressionPtr       _cond;
     };
     struct IfStatement: public  Statement {
         std::list<IfBlock>  _if_blocks;
-        StatementBlock      _else_block;
+        AstBlock            _else_block;
 
-        IfStatement(std::list<IfBlock> if_block, StatementBlock else_block) {
+        IfStatement(std::list<IfBlock> if_block, AstBlock else_block) {
             _if_blocks = if_block;
             _else_block = else_block;
         }
 
-        StatementType GetType() override {
-            return StatementType::IF_STATEMENT;
+        AstType GetType() override {
+            return AstType::IfStatement;
         }
     };
     using IfStatementPtr = std::shared_ptr<IfStatement>;
 
     struct DeclarVarStatement: public  Statement {
         std::string         _name;
+        std::string         _type;
         ExpressionPtr       _assign_value;
 
-        DeclarVarStatement(std::string name, ExpressionPtr assign_value) {
+        DeclarVarStatement(std::string name, std::string type, ExpressionPtr assign_value) {
             _name = name;
+            _name = type;
             _assign_value = assign_value;
         }
     
-        StatementType GetType() override {
-            return StatementType::DECL_VAR_STATEMENT;
+        AstType GetType() override {
+            return AstType::DeclarVarStatement;
         }
     };
     using DeclarVarStatementPtr = std::shared_ptr<DeclarVarStatement>;
@@ -65,16 +74,18 @@ namespace begonia
     struct DeclarFuncStatement: public Statement {
         std::string	                        _name;
         std::list<DeclarVarStatementPtr>    _decl_vars;
-        StatementBlock                      _block;
+        std::string	                        _ret_type;
+        AstBlock                            _block;
 
-        DeclarFuncStatement(std::string name, std::list<DeclarVarStatementPtr> decl_vars, StatementBlock block) {
+        DeclarFuncStatement(std::string name, std::list<DeclarVarStatementPtr> decl_vars, std::string ret_type, AstBlock  block) {
             _name = name;
             _decl_vars = decl_vars;
+            _ret_type = ret_type;
             _block = block;
         }
 
-        StatementType GetType() override {
-            return StatementType::DECL_FUNC_STATEMENT;
+        AstType GetType() override {
+            return AstType::DeclarFuncStatement;
         }
     };
     using DeclarFuncStatementPtr = std::shared_ptr<DeclarFuncStatement>;
@@ -88,23 +99,23 @@ namespace begonia
             _assign_value = assign_value;
         }
 
-        StatementType GetType() override {
-            return StatementType::ASSIGN_STATEMENT;
+        AstType GetType() override {
+            return AstType::AssignStatement;
         }
     };
     using AssignStatementPtr = std::shared_ptr<AssignStatement>;
 
     struct WhileStatement: public Statement {
         ExpressionPtr      _condition;
-        StatementBlock     _block;
+        AstBlock           _block;
 
-        WhileStatement(ExpressionPtr condition, StatementBlock block) {
+        WhileStatement(ExpressionPtr condition, AstBlock block) {
             _condition = condition;
             _block = block;
         }
 
-        StatementType GetType() override {
-            return StatementType::WHILE_STATEMENT;
+        AstType GetType() override {
+            return AstType::WhileStatement;
         }
     };
     using WhileStatementPtr = std::shared_ptr<WhileStatement>;
@@ -116,25 +127,10 @@ namespace begonia
             _ret_values = ret_values;
         }
 
-        StatementType GetType() override {
-            return StatementType::RETURN_STATEMENT;
+        AstType GetType() override {
+            return AstType::RetStatement;
         }
     };
     using ReturnStatementPtr = std::shared_ptr<ReturnStatement>;
-
-    struct FuncCallStatement: public Statement/* , FuncCallExpression*/ {
-        std::string                 _identifier;
-        std::vector<ExpressionPtr>  _parameters;
-
-        FuncCallStatement(std::string identifier, std::vector<ExpressionPtr>  parameters) {
-            _identifier = identifier;
-            _parameters = parameters;
-        }
-
-        StatementType GetType() override {
-            return StatementType::CALL_FUNC_STATEMENT;
-        }
-    };
-    using FuncCallStatementPtr = std::shared_ptr<FuncCallStatement>;
 }
 #endif
