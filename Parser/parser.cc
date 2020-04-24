@@ -124,7 +124,7 @@ namespace begonia
         Token lcurly_token = _lexer.GetNextToken();
         if (lcurly_token.val != TokenType::TOKEN_SEP_LCURLY) {
             ParseError(lcurly_token, "{");
-            return AstBlockPtr{};
+            return AstBlockPtr(new AstBlock{});
         }
         AstBlockPtr block(new AstBlock());
         do {
@@ -139,7 +139,7 @@ namespace begonia
         Token rcurly_token = _lexer.GetNextToken();
         if (rcurly_token.val != TokenType::TOKEN_SEP_RCURLY) {
             ParseError(rcurly_token, "}");
-            return AstBlockPtr{};
+            return AstBlockPtr(new AstBlock{});
         }
         
         return block;
@@ -229,7 +229,7 @@ namespace begonia
             return DeclarFuncStatementPtr(nullptr);
         }
 
-        AstBlockPtr block;
+        AstBlockPtr block(new AstBlock);
         Token try_token = _lexer.LookAhead(0);
         if (try_token.val == TokenType::TOKEN_SEP_SEMICOLON) {
             _lexer.GetNextToken();
@@ -336,7 +336,7 @@ namespace begonia
         }
 
         std::list<IfBlock> if_blocks;
-        AstBlockPtr else_block;
+        AstBlockPtr else_block(new AstBlock{});
 
         ExpressionPtr if_cond_exp = ParseExpression();
 
