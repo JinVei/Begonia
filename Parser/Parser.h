@@ -58,7 +58,7 @@ namespace begonia
         auto ParseFuncCallExpression()  -> FuncCallExpressionPtr;
         auto ParseSemicolon();
         auto ParseIfStatement()         -> IfStatementPtr;
-        auto ParseCurlyBlock()          -> AstBlock;
+        auto ParseCurlyBlock()          -> AstBlockPtr;
         auto ParseExpressionStatement() -> ExpressionPtr;
         auto ParseDeclarVarStatement()  -> DeclarVarStatementPtr;
         auto ParseDeclarVar()           -> DeclarVarStatementPtr;

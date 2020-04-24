@@ -120,26 +120,26 @@ namespace begonia
         exit(1);
     }
 
-    auto Parser::ParseCurlyBlock() -> AstBlock {
+    auto Parser::ParseCurlyBlock() -> AstBlockPtr {
         Token lcurly_token = _lexer.GetNextToken();
         if (lcurly_token.val != TokenType::TOKEN_SEP_LCURLY) {
             ParseError(lcurly_token, "{");
-            return AstBlock{};
+            return AstBlockPtr{};
         }
-        AstBlock block;
+        AstBlockPtr block(new AstBlock());
         do {
             Token try_token = _lexer.LookAhead(0);
             if (try_token.val == TokenType::TOKEN_SEP_RCURLY) {
                 break;
             }
             AstPtr statement = ParseStatement();
-            block.push_back(statement);
+            block->push_back(statement);
         } while(1);
 
         Token rcurly_token = _lexer.GetNextToken();
         if (rcurly_token.val != TokenType::TOKEN_SEP_RCURLY) {
             ParseError(rcurly_token, "}");
-            return AstBlock{};
+            return AstBlockPtr{};
         }
         
         return block;
@@ -160,7 +160,7 @@ namespace begonia
         }
 
         ExpressionPtr cond_exp = ParseExpression();
-        AstBlock block = ParseCurlyBlock();
+        AstBlockPtr block = ParseCurlyBlock();
 
         auto statement = new WhileStatement(cond_exp, block);
         return WhileStatementPtr(statement);
@@ -229,7 +229,7 @@ namespace begonia
             return DeclarFuncStatementPtr(nullptr);
         }
 
-        AstBlock block;
+        AstBlockPtr block;
         Token try_token = _lexer.LookAhead(0);
         if (try_token.val == TokenType::TOKEN_SEP_SEMICOLON) {
             _lexer.GetNextToken();
@@ -336,11 +336,11 @@ namespace begonia
         }
 
         std::list<IfBlock> if_blocks;
-        AstBlock else_block;
+        AstBlockPtr else_block;
 
         ExpressionPtr if_cond_exp = ParseExpression();
 
-        AstBlock block = ParseCurlyBlock();
+        AstBlockPtr block = ParseCurlyBlock();
         if_blocks.push_back(IfBlock{block, if_cond_exp});
 
         bool continue_parse_elif_block = true;
@@ -349,7 +349,7 @@ namespace begonia
             if (try_token.val == TokenType::TOKEN_KW_ELSEIF) {
                 Token elif_token = _lexer.GetNextToken();
                 ExpressionPtr cond_exp = ParseExpression();
-                AstBlock block = ParseCurlyBlock();
+                AstBlockPtr block = ParseCurlyBlock();
                 if_blocks.push_back(IfBlock{block, cond_exp});
 
             } else if (try_token.val == TokenType::TOKEN_KW_ELSE) {

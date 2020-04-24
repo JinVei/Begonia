@@ -31,7 +31,7 @@ void RraverseStatement(begonia::AstBlock statment_block) {
         } else if (statment->GetType() == begonia::AstType::DeclarFuncStatement) {
             std::cout<<"DECL_FUNC_STATEMENT\n";
             auto ptr = std::dynamic_pointer_cast<begonia::DeclarFuncStatement>(statment);
-            RraverseStatement(ptr->_block);
+            RraverseStatement(*ptr->_block);
         } else if (statment->GetType() == begonia::AstType::DeclarVarStatement) {
             std::cout<<"DECL_VAR_STATEMENT\n";
         } else if (statment->GetType() == begonia::AstType::IfStatement) {

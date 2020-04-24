@@ -22,14 +22,14 @@ namespace begonia
     using AstBlockPtr = std::shared_ptr<AstBlock>;
 
     struct IfBlock {
-        AstBlock            _block;
+        AstBlockPtr         _block;
         ExpressionPtr       _cond;
     };
     struct IfStatement: public  Statement {
         std::list<IfBlock>  _if_blocks;
-        AstBlock            _else_block;
+        AstBlockPtr            _else_block;
 
-        IfStatement(std::list<IfBlock> if_block, AstBlock else_block) {
+        IfStatement(std::list<IfBlock> if_block, AstBlockPtr else_block) {
             _if_blocks = if_block;
             _else_block = else_block;
         }
@@ -61,9 +61,9 @@ namespace begonia
         std::string	                        _name;
         std::list<DeclarVarStatementPtr>    _decl_vars;
         std::string	                        _ret_type;
-        AstBlock                            _block;
+        AstBlockPtr                         _block;
 
-        DeclarFuncStatement(std::string name, std::list<DeclarVarStatementPtr> decl_vars, std::string ret_type, AstBlock  block) {
+        DeclarFuncStatement(std::string name, std::list<DeclarVarStatementPtr> decl_vars, std::string ret_type, AstBlockPtr  block) {
             _name = name;
             _decl_vars = decl_vars;
             _ret_type = ret_type;
@@ -93,9 +93,9 @@ namespace begonia
 
     struct WhileStatement: public Statement {
         ExpressionPtr      _condition;
-        AstBlock           _block;
+        AstBlockPtr        _block;
 
-        WhileStatement(ExpressionPtr condition, AstBlock block) {
+        WhileStatement(ExpressionPtr condition, AstBlockPtr block) {
             _condition = condition;
             _block = block;
         }
