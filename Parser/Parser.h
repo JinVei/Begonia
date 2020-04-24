@@ -44,7 +44,7 @@ namespace begonia
     public:
         Parser(std::string source_file);
         void Parse();
-        AstBlock      _ast;
+        AstPtr      _ast;
 
     private:
         Lexer               _lexer;

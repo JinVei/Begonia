@@ -1,7 +1,6 @@
 #include "Parser.h"
 #include "iostream"
 // TODO: KW_DOUBLE KW_INT KW_FALSE KW_TRUE KW_STRING
-// TODO: parser expr in body
 namespace begonia
 {
     void Parser::initStatementParser() {
@@ -102,15 +101,17 @@ namespace begonia
     }
 
     void Parser::Parse(){
+        auto block = AstBlockPtr(new AstBlock());
         do {
             Token try_token = _lexer.LookAhead(0);
             if (try_token.val != TokenType::TOKEN_SEP_EOF){
                 AstPtr statement = ParseStatement();
-                _ast.push_back(statement);
+                block->push_back(statement);
             } else {
                 break;
             }
         } while(1);
+        _ast = block;
     }
 
     void Parser::ParseError(Token token, std::string expectedWord) {
@@ -301,15 +302,8 @@ namespace begonia
     }
 
     auto Parser::ParseExpressionStatement() -> ExpressionPtr {
-        //FuncCallExpressionPtr func_call_exp = ParseFuncCallExpression();
         ExpressionPtr expr = ParseExpression();
         ParseSemicolon();
-        
-        // auto funcall_statement = new FuncCallStatement (
-        //     func_call_exp->_identifier,
-        //     func_call_exp->_parameters
-        // );
-        // return FuncCallStatementPtr(funcall_statement);
         return expr;
             
     }

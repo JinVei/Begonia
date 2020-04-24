@@ -10,7 +10,7 @@ int main()
     parser.Parse();
     auto statment_block = parser._ast;
 
-    RraverseStatement(parser._ast);
+    RraverseStatement(*std::dynamic_pointer_cast<begonia::AstBlock>(parser._ast));
 
     return 0;
 }

@@ -9,21 +9,7 @@
 
 namespace begonia
 {
-    // enum class StatementType: uint8_t {
-    //     IF_STATEMENT = 0,
-    //     DECL_VAR_STATEMENT,
-    //     DECL_FUNC_STATEMENT,
-    //     ASSIGN_STATEMENT,
-    //     WHILE_STATEMENT,
-    //     RETURN_STATEMENT,
-    //     CALL_FUNC_STATEMENT,
-    //     UNKNOWN_STATEMENT,
-    // };
-
     struct Statement: virtual public AST {
-        // virtual StatementType GetType() {
-        //     return StatementType::UNKNOWN_STATEMENT;
-        // }
     };
 
     using StatementPtr = std::shared_ptr<Statement>;
@@ -33,7 +19,7 @@ namespace begonia
             return AstType::Block;
         }
     };
-    //using StatementBlock = std::vector<StatementPtr>;
+    using AstBlockPtr = std::shared_ptr<AstBlock>;
 
     struct IfBlock {
         AstBlock            _block;
