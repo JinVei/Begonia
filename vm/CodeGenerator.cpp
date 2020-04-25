@@ -205,19 +205,20 @@ void MainFuncCodegen(){
         llvm::Function::Create(FT, llvm::Function::ExternalLinkage, "main", TheModule.get());
 
     llvm::BasicBlock *BB = llvm::BasicBlock::Create(TheContext, "entry", F);
-    Builder.SetInsertPoint(BB);
+    //Builder.SetInsertPoint(BB);
     llvm::IRBuilder<> blockbBuilder(BB);
     std::vector<llvm::Value*> emptyArgs;
-    blockbBuilder.CreateCall(mockPrintF, llvm::makeArrayRef(emptyArgs));
+    Builder.CreateCall(mockPrintF, llvm::makeArrayRef(emptyArgs));
+    //llvm::Value* var1 = Builder.CreateAlloca(llvm::Type::getInt32Ty(TheContext));
+    llvm::Value* var2 = blockbBuilder.CreateAlloca(llvm::Type::getInt32Ty(TheContext));
 
     //auto RetVal = llvm::UndefValue::get(llvm::Type::getVoidTy(TheContext));
-    auto RetVal = Builder.CreateRetVoid();
+    auto RetVal = blockbBuilder.CreateRetVoid();
 
     //Builder.CreateRet(RetVal);
-
     // Validate the generated code, checking for consistency.
     llvm::verifyFunction(*F);
-
+    //llvm::Value* var4 = Builder.CreateAlloca(llvm::Type::getInt32Ty(TheContext));
 }
 //Builder.CreateCall
 

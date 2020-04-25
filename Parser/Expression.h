@@ -12,11 +12,12 @@ namespace begonia
     using ExpressionPtr = std::shared_ptr<Expression>;
 
     struct OperationExpresson: public Expression {
-        std::string     _operator;
+        //std::string     _operator;
+        TokenType       _op;
         ExpressionPtr   _lexp;
         ExpressionPtr   _rexp;
-        OperationExpresson(std::string op, ExpressionPtr lexp, ExpressionPtr rexp) {
-            _operator = op;
+        OperationExpresson(TokenType op, ExpressionPtr lexp, ExpressionPtr rexp) {
+            _op = op;
             _lexp = lexp;
             _rexp = rexp;
             _type = AstType::OpExpr;

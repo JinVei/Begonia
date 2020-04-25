@@ -8,7 +8,6 @@ namespace begonia {
         return exp;
     }
 
-
     auto Parser::ParseOpExpression (
         std::vector<TokenType> accepted_token_types, 
         OpExpPaser subExpPaeser) 
@@ -34,7 +33,7 @@ namespace begonia {
             Token operator_token = _lexer.GetNextToken();
             ExpressionPtr rexp = subExpPaeser();
             // std::cout << opToken.word;
-            auto operation_exp = new OperationExpresson(operator_token.word, exp, rexp);
+            auto operation_exp = new OperationExpresson(operator_token.val, exp, rexp);
             exp = ExpressionPtr(operation_exp);
         }
 
@@ -94,7 +93,7 @@ namespace begonia {
 
             ExpressionPtr rExp = ParseExpressionL1();
 
-            auto opExp = new OperationExpresson(operator_token.word, nullptr, rExp);
+            auto opExp = new OperationExpresson(operator_token.val, nullptr, rExp);
             return OperationExpressonPtr(opExp);
         }
 
