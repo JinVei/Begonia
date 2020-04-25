@@ -3,14 +3,15 @@
 // TODO: import, table, for
 /*
 block := {Statement}
-Statement := [IfStat]
-        | [DeclarVarStat]
-        | [DeclarFuncStat]
-        | [AssignStat]
-        | [ForStat]
-        | [WhileStat]
-        | [RetStat]
-        | [ExprStat]
+Statement := IfStat
+        | DeclarVarStat
+        | DeclarFuncStat
+        | AssignStat
+        | ForStat
+        | WhileStat
+        | RetStat
+        | exp
+        | ;
 
 IfStat          := if exp '{' block '}' [elif exp '{' block '}'] [else '{' block '}'] 
 DeclarVarStat   := var identifier ['=' exp] ;
@@ -56,7 +57,7 @@ namespace begonia
         auto ParseAssignStatement() -> AssignStatementPtr;
 
         auto ParseFuncCallExpression()  -> FuncCallExpressionPtr;
-        auto ParseSemicolon();
+        auto ParseSemicolon()           -> AstPtr;
         auto ParseIfStatement()         -> IfStatementPtr;
         auto ParseCurlyBlock()          -> AstBlockPtr;
         auto ParseExpressionStatement() -> ExpressionPtr;

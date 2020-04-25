@@ -23,7 +23,8 @@ namespace begonia {
     FUNCTION(NilExp)                \
     FUNCTION(NumberExpr)            \
     FUNCTION(StringExpr)            \
-    FUNCTION(IdentifierExpr)        
+    FUNCTION(IdentifierExpr)        \
+    FUNCTION(Semicolon)             \
 
 enum class AstType: uint8_t{
     ALL_AST_TYPES(GENERATE_ENUM)

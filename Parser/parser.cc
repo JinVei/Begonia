@@ -11,6 +11,7 @@ namespace begonia
         _statement_parsers[AstType::RetStatement]       = std::bind(&Parser::ParseReturnStatement,this);
         _statement_parsers[AstType::WhileStatement]     = std::bind(&Parser::ParseWhileStatement,this);
         _statement_parsers[AstType::Expr]               = std::bind(&Parser::ParseExpressionStatement,this);
+        _statement_parsers[AstType::Semicolon]          = std::bind(&Parser::ParseSemicolon,this);
     }
 
     Parser::Parser(std::string sourcePath): _lexer(sourcePath) {
@@ -80,6 +81,9 @@ namespace begonia
         case TokenType::TOKEN_SEP_LPAREN:
             return AstType::Expr;
 
+        case TokenType::TOKEN_SEP_SEMICOLON:
+            return AstType::Semicolon;
+
         default:
             if(isExprToken(token2.val)){
                 return AstType::Expr;
@@ -106,7 +110,9 @@ namespace begonia
             Token try_token = _lexer.LookAhead(0);
             if (try_token.val != TokenType::TOKEN_SEP_EOF){
                 AstPtr statement = ParseStatement();
-                block->push_back(statement);
+                if (statement != nullptr) {
+                    block->push_back(statement);
+                }
             } else {
                 break;
             }
@@ -133,7 +139,9 @@ namespace begonia
                 break;
             }
             AstPtr statement = ParseStatement();
-            block->push_back(statement);
+            if (statement != nullptr) {
+                block->push_back(statement);
+            }
         } while(1);
 
         Token rcurly_token = _lexer.GetNextToken();
@@ -145,12 +153,13 @@ namespace begonia
         return block;
     }
 
-    auto Parser::ParseSemicolon() {
+    AstPtr Parser::ParseSemicolon() {
         Token semi_token = _lexer.GetNextToken();
 
         if (semi_token.val != TokenType::TOKEN_SEP_SEMICOLON) {
             ParseError(semi_token, ";");
         }
+        return nullptr;
     }
 
     auto Parser::ParseWhileStatement() -> WhileStatementPtr {
@@ -258,7 +267,9 @@ namespace begonia
         // var type
         std::string type = "";
         Token try_token = _lexer.LookAhead(0);
-        if (try_token.val == TokenType::TOKEN_IDENTIFIER) {
+        if (try_token.val == TokenType::TOKEN_IDENTIFIER
+            || try_token.val == TokenType::TOKEN_KW_STRING
+            || try_token.val == TokenType::TOKEN_KW_DOUBLE) {
             type = try_token.word;
             _lexer.GetNextToken(); // pass type
         }
@@ -307,7 +318,7 @@ namespace begonia
         return expr;
             
     }
-    
+
     auto Parser::ParseAssignStatement() -> AssignStatementPtr {
         Token token0 = _lexer.GetNextToken();
         Token token1 = _lexer.GetNextToken();

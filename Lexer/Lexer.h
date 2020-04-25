@@ -54,11 +54,12 @@ namespace begonia
         TOKEN_KW_FUNC,
         TOKEN_KW_RETURN,
         TOKEN_KW_NIL,
+        TOKEN_KW_DOUBLE,
+        TOKEN_KW_STRING,
 
         TOKEN_NUMBER,
         TOKEN_STRING,
         TOKEN_IDENTIFIER,
-
     };
 
     struct Token

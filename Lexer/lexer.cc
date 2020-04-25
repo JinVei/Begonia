@@ -25,6 +25,8 @@ namespace begonia {
             {"and", 	TokenType::TOKEN_OP_AND},
             {"return", 	TokenType::TOKEN_KW_RETURN},
             {"nil", 	TokenType::TOKEN_KW_NIL},
+            {"double", 	TokenType::TOKEN_KW_DOUBLE},
+            {"string", 	TokenType::TOKEN_KW_STRING},
         };
 
         for(auto kv : key_word_type_) {
