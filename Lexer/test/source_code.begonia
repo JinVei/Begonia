@@ -4,6 +4,7 @@ func test() retType
 {
 	if lexerTest != 0 {
 		lexerTest = 100
+		lexerTest = 100.11
 	}
 
 	var str = "hi"

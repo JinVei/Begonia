@@ -178,10 +178,23 @@ namespace begonia {
     Token Lexer::ScanNumberToken(std::string word)
     {
         std::regex integer("[[:digit:]]+");
-        if (!regex_match(word, integer))
+        if (!regex_match(word, integer)) {
             return Token{TokenType::TOKEN_SEP_EOF, current_line_, "ScanNumberToken", src_file_name_};
-        else
-            return Token{TokenType::TOKEN_NUMBER, current_line_, word, src_file_name_};
+        }
+        else {
+            char ch = source_.get();
+            if (ch == '.') {
+                std::string float_number = GetWord();
+                if (!regex_match(float_number, integer)) {
+                    Interrupt("need number");
+                }
+                float_number = word + "." + float_number;
+                return Token{TokenType::TOKEN_NUMBER, current_line_, float_number, src_file_name_};
+            } else {
+                source_.unget();
+                return Token{TokenType::TOKEN_NUMBER, current_line_, word, src_file_name_};
+            }
+        }
     }
 
     Token Lexer::ScanQuoteToken()
