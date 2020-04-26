@@ -31,9 +31,9 @@ exp2 := !exp1 | exp1
 exp1 :=  '(' exp8 ')' | nil | false | true | number | string | identifier | funcallStat
 */
 
-#include "lexer.h"
-#include "statement.h"
-#include "expression.h"
+#include "Lexer.h"
+#include "Statement.h"
+#include "Expression.h"
 #include <functional>
 
 namespace begonia

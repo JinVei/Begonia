@@ -1,4 +1,4 @@
-#include "lexer.h"
+#include "Lexer.h"
 
 #include <map>
 #include <string>
