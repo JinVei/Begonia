@@ -1,26 +1,6 @@
-#include "llvm/ADT/APFloat.h"
-#include "llvm/ADT/Optional.h"
-#include "llvm/ADT/STLExtras.h"
-#include "llvm/IR/BasicBlock.h"
-#include "llvm/IR/Constants.h"
-#include "llvm/IR/DerivedTypes.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/Instructions.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/LegacyPassManager.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/Type.h"
-#include "llvm/IR/Verifier.h"
-#include "llvm/Support/FileSystem.h"
-#include "llvm/Support/Host.h"
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/Support/TargetRegistry.h"
-#include "llvm/Support/TargetSelect.h"
-#include "llvm/Target/TargetMachine.h"
-#include "llvm/Target/TargetOptions.h"
-#include "parser.h"
+#include "Parser.h"
 #include "expression.h"
+#include "CodeGen.h"
 
 #include <algorithm>
 #include <cassert>
@@ -35,52 +15,8 @@
 #include <vector>
 
 using namespace llvm;
+
 namespace begonia {
-
-//class 
-class CodeGen {
-public:
-    using ValueTypeSize = int8_t;
-    enum class ValueType: ValueTypeSize{
-        String,
-        Int,
-        Double,
-        Bool,
-    };
-    struct Environment {
-        std::map<std::string, llvm::Value*>         declared_variable;
-        std::map<std::string, llvm::FunctionType *> declared_prototype;
-        llvm::BasicBlock*                           block;
-    };
-    using GeneratorHandler = std::function<llvm::Value*(AstPtr,std::list<Environment>&)>;
-
-    CodeGen();
-    llvm::Value* blockGen(AstPtr, std::list<Environment>);
-
-private:
-    llvm::LLVMContext                   _context;
-    llvm::IRBuilder<>                   _builder;
-    std::unique_ptr<llvm::Module>       _module;
-    std::map<std::string, ValueType>    _basic_variable_type;
-    std::map<AstType, GeneratorHandler> _generator;
-    Environment                         _global_env;
-
-
-    llvm::Type* getValueType(std::string type_name);
-
-    llvm::Value* declareProtoGen(AstPtr, std::list<Environment>&);
-    llvm::Value* assignGen(AstPtr, std::list<Environment>&);
-    llvm::Value* funcallGen(AstPtr, std::list<Environment>&);
-    llvm::Value* declarVarGen(AstPtr, std::list<Environment>&);
-    llvm::Value* ifBlockGen(AstPtr, std::list<Environment>&);
-    llvm::Value* returnGen(AstPtr, std::list<Environment>&);
-    llvm::Value* whileBlockGen(AstPtr, std::list<Environment>&);
-    llvm::Value* exprGen(AstPtr ast, std::list<Environment>& env);
-    llvm::Value* opExprGen(AstPtr ast, std::list<Environment>& env);
-    llvm::Value* addExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr);
-    llvm::Value* numberExprGen(ExpressionPtr expr);
-
-};
 
 CodeGen::CodeGen(): _builder(_context) {
     _basic_variable_type = {
@@ -91,12 +27,90 @@ CodeGen::CodeGen(): _builder(_context) {
     };
     _generator = {
         {AstType::AssignStatement, std::bind(&CodeGen::assignGen, this, std::placeholders::_1, std::placeholders::_2)},
-        {AstType::FuncCallExpr, std::bind(&CodeGen::funcallGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::DeclarFuncStatement, std::bind(&CodeGen::declareProtoGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::DeclarVarStatement, std::bind(&CodeGen::declarVarGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::IfStatement, std::bind(&CodeGen::ifBlockGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::RetStatement, std::bind(&CodeGen::returnGen, this, std::placeholders::_1, std::placeholders::_2)},
+        {AstType::Expr, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
+        {AstType::FuncCallExpr, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
+        {AstType::OpExpr, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
+        {AstType::BoolExpr, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
+        {AstType::NilExp, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
+        {AstType::NumberExpr, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
+        {AstType::StringExpr, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
+        {AstType::IdentifierExpr, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
     };
+}
+
+int CodeGen::initialize(){
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmParsers();
+    llvm::InitializeAllAsmPrinters();
+
+    _module =  make_unique<llvm::Module>("my cool jit", _context);
+
+    auto TargetTriple = llvm::sys::getDefaultTargetTriple();
+    std::string Error;
+    auto Target = llvm::TargetRegistry::lookupTarget(TargetTriple, Error);
+
+    // Print an error and exit if we couldn't find the requested target.
+    // This generally occurs if we've forgotten to initialise the
+    // TargetRegistry or we have a bogus target triple.
+    if (!Target) {
+        llvm::errs() << Error;
+        return 1;
+    }
+    auto CPU = "generic";
+    auto Features = "";
+
+    llvm::TargetOptions opt;
+    auto RM = llvm::Optional<llvm::Reloc::Model>();
+    auto TargetMachine = Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
+    auto layout = TargetMachine->createDataLayout();
+    _module->setDataLayout(layout);
+    _module->setTargetTriple(TargetTriple);
+
+    auto Filename = "output.o";
+    std::error_code EC;
+    _outDestPtr = std::shared_ptr<llvm::raw_fd_ostream> (new llvm::raw_fd_ostream(Filename, EC, llvm::sys::fs::OF_None));
+    
+    if (EC) {
+        llvm::errs() << "Could not open file: " << EC.message();
+        return 1;
+    }
+
+    llvm::legacy::PassManager pass;
+    auto FileType = llvm::TargetMachine::CGFT_ObjectFile;
+
+    if (TargetMachine->addPassesToEmitFile(pass, *_outDestPtr, nullptr, FileType)) {
+        llvm::errs() << "TheTargetMachine can't emit a file of this type";
+        return 1;
+    }
+  
+  //MainFuncCodegen();
+  return 0;
+
+}
+
+int CodeGen::generate(AstPtr ast ) {
+    Environment env;
+    env.block = nullptr;
+    blockGen(ast, {env});
+    _pass.run(*_module);
+    _outDestPtr->flush();
+
+    // int retcode = system("llc file.ll -filetype=obj -o file.o");
+    // if (retcode != 0) 
+    //     return 1;
+    // retcode = system("ld -o test ./file.o ./output.o  -lSystem -macosx_version_min 10.14");
+    // if (retcode != 0) 
+    //     return 1;
+
+    _module->print(llvm::errs(), nullptr);
+
+    return 0;
 }
 
 llvm::Type* CodeGen::getValueType(std::string type_name) {
@@ -113,8 +127,11 @@ llvm::Type* CodeGen::getValueType(std::string type_name) {
             return llvm::Type::getInt8PtrTy(_context);
         default:
             //return llvm::StructType::get(_context);
+            assert(false);
             return nullptr;
         }
+    } else {
+        assert(false);
     }
     
     // TODO: struct type
@@ -123,7 +140,7 @@ llvm::Type* CodeGen::getValueType(std::string type_name) {
 }
 
 llvm::Value* CodeGen::declareProtoGen(AstPtr ast, std::list<Environment>& env) {
-    auto funcAst = dynamic_pointer_cast<DeclarFuncStatement>(ast);
+    auto funcAst = std::dynamic_pointer_cast<DeclarFuncStatement>(ast);
     assert(funcAst != nullptr);
 
     auto has_declared = _global_env.declared_prototype.find(funcAst->_name);
@@ -177,22 +194,22 @@ llvm::Value* CodeGen::declareProtoGen(AstPtr ast, std::list<Environment>& env) {
 }
 
 llvm::Value* CodeGen::blockGen(AstPtr ast, std::list<Environment> env) {
-    auto block = dynamic_pointer_cast<AstBlock>(ast);
+    auto block = std::dynamic_pointer_cast<AstBlock>(ast);
     assert(block != nullptr);
 
     for(auto statement : *block) {
-        auto it = _generator.find(statement->GetType());
-        assert(it != _generator.end());
-        auto handler = it->second;
+        auto found = _generator.find(statement->GetType());
+        assert(found != _generator.end());
+        auto handler = found->second;
         handler(statement, env);
     }
     return nullptr;
 }
 
 llvm::Value* CodeGen::assignGen(AstPtr ast, std::list<Environment>& env) {
-    auto assignAst = dynamic_pointer_cast<AssignStatement>(ast);
+    auto assignAst = std::dynamic_pointer_cast<AssignStatement>(ast);
     assert(assignAst != nullptr);
-    llvm::IRBuilder<> builder(env.front().block);
+    auto builder = getBuilder(env);
 
     auto var_name = assignAst->_identifier;
     llvm::Value* var_addr;
@@ -201,7 +218,7 @@ llvm::Value* CodeGen::assignGen(AstPtr ast, std::list<Environment>& env) {
     auto found = declared_variable.find(var_name);
     if (found == declared_variable.end()) {
         printf("undefined var:%s\n", var_name.c_str());
-        abort();
+        assert(false);
     }
     var_addr = found->second;
 
@@ -214,27 +231,29 @@ llvm::Value* CodeGen::assignGen(AstPtr ast, std::list<Environment>& env) {
 
 llvm::Value* CodeGen::exprGen(AstPtr ast, std::list<Environment>& env) {
     assert(ast != nullptr);
-    auto expr = dynamic_pointer_cast<Expression>(ast);
+    auto expr = std::dynamic_pointer_cast<Expression>(ast);
     assert(expr != nullptr);
     switch(expr->GetType()) {
         case AstType::OpExpr:
             return opExprGen(expr, env);
-        case AstType::FuncCallExpr:
-            return funcallGen(ast, env);
-        case AstType::IdentifierExpr:
         case AstType::NumberExpr:
+            return numberExprGen(ast, env);
+        case AstType::IdentifierExpr:
+            return IdentifierExprGen(ast, env);
+        case AstType::FuncCallExpr:
+            //return funcallGen(ast, env);
         case AstType::StringExpr:
         case AstType::BoolExpr:
         case AstType::NilExp:
         default:
-            printf("[exprGen] unknown expr type\n");
-            abort();
+            printf("[exprGen] unknown expr type:%hhu\n", expr->GetType());
+            assert(false);
             return nullptr;
     }
 }
 
 llvm::Value* CodeGen::opExprGen(AstPtr ast, std::list<Environment>& env) {
-    auto opexpr = dynamic_pointer_cast<OperationExpresson>(ast);
+    auto opexpr = std::dynamic_pointer_cast<OperationExpresson>(ast);
     assert(opexpr != nullptr);
 
     auto lexpr = opexpr->_lexp;
@@ -249,14 +268,14 @@ llvm::Value* CodeGen::opExprGen(AstPtr ast, std::list<Environment>& env) {
     }
     switch(opexpr->_op){
         case TokenType::TOKEN_OP_ADD:
-            return addExprGen(lexpr,rexpr);
+            return addExprGen(lexpr,rexpr, env);
         case TokenType::TOKEN_OP_SUB:
-            return addExprGen(lexpr,rexpr);
+            return addExprGen(lexpr,rexpr, env);
         case TokenType::TOKEN_OP_MUL:
-            return addExprGen(lexpr,rexpr);
+            return addExprGen(lexpr,rexpr, env);
             break;
         case TokenType::TOKEN_OP_DIV:
-            return addExprGen(lexpr,rexpr);
+            return addExprGen(lexpr,rexpr, env);
         case TokenType::TOKEN_OP_AND:
         case TokenType::TOKEN_OP_OR:
         case TokenType::TOKEN_OP_EQ:
@@ -266,17 +285,30 @@ llvm::Value* CodeGen::opExprGen(AstPtr ast, std::list<Environment>& env) {
         case TokenType::TOKEN_OP_LT:
         default:
             printf("[opExprGen] unkown op");
-            abort();
+            assert(false);
             return nullptr;
     }
 }
+llvm::IRBuilder<> CodeGen::getBuilder(std::list<Environment>& env){
+    auto block = env.front().block;
+    if ( block == nullptr) {
+        return _builder;
+    } else {
+        return llvm::IRBuilder<>(block);
+    }
 
-llvm::Value* CodeGen::addExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr){
-    return nullptr;
 }
 
-llvm::Value* CodeGen::numberExprGen(ExpressionPtr expr){
-    NumberExpressionPtr numberExpr = dynamic_pointer_cast<NumberExpression>(expr);
+llvm::Value* CodeGen::addExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::list<Environment>& env){
+    auto builder = getBuilder(env);
+    auto lval = exprGen(lexpr, env);
+    auto rval = exprGen(rexpr, env);
+    auto val = builder.CreateFAdd(lval, rval);
+    return val;
+}
+
+llvm::Value* CodeGen::numberExprGen(AstPtr expr, std::list<Environment>& env){
+    NumberExpressionPtr numberExpr = std::dynamic_pointer_cast<NumberExpression>(expr);
     assert(numberExpr != nullptr);
     auto value = llvm::ConstantFP::get(_context, llvm::APFloat(numberExpr->_number));
     return value;
@@ -286,7 +318,40 @@ llvm::Value* CodeGen::numberExprGen(ExpressionPtr expr){
 llvm::Value* CodeGen::funcallGen(AstPtr ast, std::list<Environment>& env) {
     return nullptr;
 }
+
+llvm::Value* CodeGen::IdentifierExprGen(AstPtr ast, std::list<Environment>& env) {
+    auto idExpr = std::dynamic_pointer_cast<IdentifierExpression>(ast);
+    assert(idExpr != nullptr);
+    std::string id = idExpr->_identifier;
+    auto found = env.front().declared_variable.find(id);
+    if (found == env.front().declared_variable.end()) {
+        printf("Can't find identifier:%s\n", id.c_str());
+        exit(1);
+        return nullptr;
+    }
+    return found->second;
+}
+
 llvm::Value* CodeGen::declarVarGen(AstPtr ast, std::list<Environment>& env) {
+    auto builder = getBuilder(env);
+    auto var_stat = std::dynamic_pointer_cast<DeclarVarStatement>(ast);
+    assert(var_stat != nullptr);
+
+    llvm::Value* var_addr = nullptr;
+    if (var_stat->_type != "") {
+        var_addr = builder.CreateAlloca(getValueType(var_stat->_type));
+    } else if (var_stat->_assign_value != nullptr) {
+        llvm::Value* assign_value = exprGen(var_stat->_assign_value, env);
+        assert(assign_value != nullptr);
+        var_addr = builder.CreateAlloca(assign_value->getType());
+        builder.CreateStore(assign_value, var_addr);
+        
+    } else{
+        assert(false);
+    }
+
+    env.front().declared_variable[var_stat->_name] = var_addr;
+    
     return nullptr;
 }
 llvm::Value* CodeGen::ifBlockGen(AstPtr ast, std::list<Environment>& env) {

@@ -47,7 +47,7 @@ namespace begonia
 
         DeclarVarStatement(std::string name, std::string type, ExpressionPtr assign_value) {
             _name = name;
-            _name = type;
+            _type = type;
             _assign_value = assign_value;
         }
     
