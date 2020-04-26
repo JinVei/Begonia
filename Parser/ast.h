@@ -12,8 +12,8 @@ namespace begonia {
     FUNCTION(Block)                 \
     FUNCTION(IfStatement)           \
     FUNCTION(AssignStatement)       \
-    FUNCTION(DeclarVarStatement)    \
-    FUNCTION(DeclarFuncStatement)   \
+    FUNCTION(DeclareVarStatement)    \
+    FUNCTION(DeclareFuncStatement)   \
     FUNCTION(WhileStatement)        \
     FUNCTION(RetStatement)          \
     FUNCTION(Expr)                  \

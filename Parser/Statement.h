@@ -40,30 +40,30 @@ namespace begonia
     };
     using IfStatementPtr = std::shared_ptr<IfStatement>;
 
-    struct DeclarVarStatement: public  Statement {
+    struct DeclareVarStatement: public  Statement {
         std::string         _name;
         std::string         _type;
         ExpressionPtr       _assign_value;
 
-        DeclarVarStatement(std::string name, std::string type, ExpressionPtr assign_value) {
+        DeclareVarStatement(std::string name, std::string type, ExpressionPtr assign_value) {
             _name = name;
             _type = type;
             _assign_value = assign_value;
         }
     
         AstType GetType() override {
-            return AstType::DeclarVarStatement;
+            return AstType::DeclareVarStatement;
         }
     };
-    using DeclarVarStatementPtr = std::shared_ptr<DeclarVarStatement>;
+    using DeclareVarStatementPtr = std::shared_ptr<DeclareVarStatement>;
 
-    struct DeclarFuncStatement: public Statement {
+    struct DeclareFuncStatement: public Statement {
         std::string	                        _name;
-        std::list<DeclarVarStatementPtr>    _decl_vars;
+        std::list<DeclareVarStatementPtr>    _decl_vars;
         std::string	                        _ret_type;
         AstBlockPtr                         _block;
 
-        DeclarFuncStatement(std::string name, std::list<DeclarVarStatementPtr> decl_vars, std::string ret_type, AstBlockPtr  block) {
+        DeclareFuncStatement(std::string name, std::list<DeclareVarStatementPtr> decl_vars, std::string ret_type, AstBlockPtr  block) {
             _name = name;
             _decl_vars = decl_vars;
             _ret_type = ret_type;
@@ -71,10 +71,10 @@ namespace begonia
         }
 
         AstType GetType() override {
-            return AstType::DeclarFuncStatement;
+            return AstType::DeclareFuncStatement;
         }
     };
-    using DeclarFuncStatementPtr = std::shared_ptr<DeclarFuncStatement>;
+    using DeclareFuncStatementPtr = std::shared_ptr<DeclareFuncStatement>;
 
     struct AssignStatement: public Statement {
         std::string        _identifier;

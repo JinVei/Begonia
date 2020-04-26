@@ -61,9 +61,9 @@ namespace begonia
         auto ParseIfStatement()         -> IfStatementPtr;
         auto ParseCurlyBlock()          -> AstBlockPtr;
         auto ParseExpressionStatement() -> ExpressionPtr;
-        auto ParseDeclarVarStatement()  -> DeclarVarStatementPtr;
-        auto ParseDeclarVar()           -> DeclarVarStatementPtr;
-        auto ParseDeclarFuncStatement() -> DeclarFuncStatementPtr;
+        auto ParseDeclareVarStatement()  -> DeclareVarStatementPtr;
+        auto ParseDeclarVar()           -> DeclareVarStatementPtr;
+        auto ParseDeclareFuncStatement() -> DeclareFuncStatementPtr;
         auto ParseMultipleExpression()  -> std::vector<ExpressionPtr>;
         auto ParseReturnStatement()     -> ReturnStatementPtr;
         auto ParseWhileStatement()      -> WhileStatementPtr;

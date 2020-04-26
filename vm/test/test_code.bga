@@ -2,3 +2,10 @@ func test() int {
     var v1 = 1.23;
     v1=1+v1;
 }
+func test2() void {
+    var v1 double;
+    var foo = v1;
+    v1 = foo + 129.111;
+    test();
+    
+}

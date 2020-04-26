@@ -34,11 +34,12 @@ public:
         Int,
         Double,
         Bool,
+        Void,
         Unkown,
     };
     struct Environment {
         std::map<std::string, llvm::Value*>         declared_variable;
-        std::map<std::string, llvm::FunctionType *> declared_prototype;
+        std::map<std::string, llvm::Function *>     declared_prototype;
         llvm::BasicBlock*                           block;
     };
     using GeneratorHandler = std::function<llvm::Value*(AstPtr,std::list<Environment>&)>;
@@ -57,6 +58,7 @@ private:
     llvm::legacy::PassManager           _pass;
     std::string                         _outFilename = "output.o";
     std::shared_ptr<llvm::raw_fd_ostream> _outDestPtr;
+    std::string                         _module_name = "module";
 
 
     llvm::Type* getValueType(std::string type_name);
@@ -64,7 +66,7 @@ private:
     llvm::Value* declareProtoGen(AstPtr, std::list<Environment>&);
     llvm::Value* assignGen(AstPtr, std::list<Environment>&);
     llvm::Value* funcallGen(AstPtr, std::list<Environment>&);
-    llvm::Value* declarVarGen(AstPtr, std::list<Environment>&);
+    llvm::Value* declareVarGen(AstPtr, std::list<Environment>&);
     llvm::Value* ifBlockGen(AstPtr, std::list<Environment>&);
     llvm::Value* returnGen(AstPtr, std::list<Environment>&);
     llvm::Value* whileBlockGen(AstPtr, std::list<Environment>&);
@@ -73,7 +75,7 @@ private:
     llvm::Value* addExprGen(ExpressionPtr, ExpressionPtr, std::list<Environment>&);
     llvm::Value* numberExprGen(AstPtr, std::list<Environment>&);
     llvm::Value* blockGen(AstPtr, std::list<Environment>);
-    llvm::Value* IdentifierExprGen(AstPtr, std::list<Environment>&);
+    llvm::Value* identifierExprGen(AstPtr, std::list<Environment>&);
 
     llvm::IRBuilder<> getBuilder(std::list<Environment>& env);
 };

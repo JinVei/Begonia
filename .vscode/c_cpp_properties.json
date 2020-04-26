@@ -6,6 +6,7 @@
                 "${workspaceRoot}",
                 "${workspaceRoot}/Lexer",
                 "${workspaceRoot}/Parser",
+                "${workspaceRoot}/vm",
                 "/usr/local/include/c++",
                 "/usr/local/include",
                 "/usr/local/opt/llvm/include"
@@ -22,7 +23,7 @@
                 ]
             },
             "cStandard": "c11",
-            "cppStandard": "c++17"
+            "cppStandard": "c++20"
         }
     ],
     "version": 4

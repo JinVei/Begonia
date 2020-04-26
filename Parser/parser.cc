@@ -6,8 +6,8 @@ namespace begonia
     void Parser::initStatementParser() {
         _statement_parsers[AstType::IfStatement]        = std::bind(&Parser::ParseIfStatement,this);
         _statement_parsers[AstType::AssignStatement]    = std::bind(&Parser::ParseAssignStatement,this);
-        _statement_parsers[AstType::DeclarFuncStatement] = std::bind(&Parser::ParseDeclarFuncStatement,this);
-        _statement_parsers[AstType::DeclarVarStatement]  = std::bind(&Parser::ParseDeclarVarStatement,this);
+        _statement_parsers[AstType::DeclareFuncStatement] = std::bind(&Parser::ParseDeclareFuncStatement,this);
+        _statement_parsers[AstType::DeclareVarStatement]  = std::bind(&Parser::ParseDeclareVarStatement,this);
         _statement_parsers[AstType::RetStatement]       = std::bind(&Parser::ParseReturnStatement,this);
         _statement_parsers[AstType::WhileStatement]     = std::bind(&Parser::ParseWhileStatement,this);
         _statement_parsers[AstType::Expr]               = std::bind(&Parser::ParseExpressionStatement,this);
@@ -52,10 +52,10 @@ namespace begonia
             return AstType::IfStatement;
 
         case TokenType::TOKEN_KW_VAR:
-            return AstType::DeclarVarStatement;
+            return AstType::DeclareVarStatement;
 
         case TokenType::TOKEN_KW_FUNC:
-            return AstType::DeclarFuncStatement;
+            return AstType::DeclareFuncStatement;
 
         case TokenType::TOKEN_IDENTIFIER:
             if (token2.val == TokenType::TOKEN_OP_ASSIGN) {
@@ -188,26 +188,26 @@ namespace begonia
         return ReturnStatementPtr(new ReturnStatement(return_val));
     }
 
-    auto Parser::ParseDeclarFuncStatement() -> DeclarFuncStatementPtr {
+    auto Parser::ParseDeclareFuncStatement() -> DeclareFuncStatementPtr {
         Token func_kw_token = _lexer.GetNextToken(); // func
         if (func_kw_token.val != TokenType::TOKEN_KW_FUNC) {
             ParseError(func_kw_token, "func");
-            return DeclarFuncStatementPtr(nullptr);
+            return DeclareFuncStatementPtr(nullptr);
         }
 
         Token identifier_token = _lexer.GetNextToken();
         if (identifier_token.val != TokenType::TOKEN_IDENTIFIER) {
             ParseError(identifier_token, "identifier");
-            return DeclarFuncStatementPtr(nullptr);
+            return DeclareFuncStatementPtr(nullptr);
         }
 
         Token lparen_token = _lexer.GetNextToken();
         if (lparen_token.val != TokenType::TOKEN_SEP_LPAREN) {
             ParseError(lparen_token, "(");
-            return DeclarFuncStatementPtr(nullptr);
+            return DeclareFuncStatementPtr(nullptr);
         }
 
-        std::list<DeclarVarStatementPtr> decl_vars;
+        std::list<DeclareVarStatementPtr> decl_vars;
         bool continue_parse_paremeter = true;
 
         Token try_token0 = _lexer.LookAhead(0);
@@ -217,7 +217,7 @@ namespace begonia
         }
 
         while (continue_parse_paremeter){
-            DeclarVarStatementPtr defVar = ParseDeclarVar();
+            DeclareVarStatementPtr defVar = ParseDeclarVar();
             decl_vars.push_back(defVar);
 
             Token next_token = _lexer.GetNextToken();
@@ -227,7 +227,7 @@ namespace begonia
                 continue_parse_paremeter = false;
             } else {
                 ParseError(next_token, ", )");
-                return DeclarFuncStatementPtr(nullptr);
+                return DeclareFuncStatementPtr(nullptr);
             }
         } 
 
@@ -235,7 +235,7 @@ namespace begonia
         Token ret_type = _lexer.GetNextToken();
         if (ret_type.val != TokenType::TOKEN_IDENTIFIER) {
             ParseError(ret_type, "Need return type ");
-            return DeclarFuncStatementPtr(nullptr);
+            return DeclareFuncStatementPtr(nullptr);
         }
 
         AstBlockPtr block(new AstBlock);
@@ -246,23 +246,23 @@ namespace begonia
             block = ParseCurlyBlock();
         }
 
-        auto defFuncStat = new DeclarFuncStatement(
+        auto defFuncStat = new DeclareFuncStatement(
             identifier_token.word,
             decl_vars,
             ret_type.word,
             block
         );
 
-        return DeclarFuncStatementPtr(defFuncStat);
+        return DeclareFuncStatementPtr(defFuncStat);
         
     }
 
-    auto Parser::ParseDeclarVar() -> DeclarVarStatementPtr {
+    auto Parser::ParseDeclarVar() -> DeclareVarStatementPtr {
         Token var_name = _lexer.GetNextToken();
 
         if (var_name.val != TokenType::TOKEN_IDENTIFIER) {
             ParseError(var_name, "identifier");
-            return DeclarVarStatementPtr(nullptr);
+            return DeclareVarStatementPtr(nullptr);
         }
         // var type
         std::string type = "";
@@ -277,36 +277,36 @@ namespace begonia
         try_token = _lexer.LookAhead(0);
         if (try_token.val != TokenType::TOKEN_OP_ASSIGN) {
             if (type != "") {
-                auto decl_var = new DeclarVarStatement (
+                auto decl_var = new DeclareVarStatement (
                     var_name.word,
                     type,
                     nullptr
                 );
-                return DeclarVarStatementPtr(decl_var);
+                return DeclareVarStatementPtr(decl_var);
             } else {
                 ParseError(var_name, std::string("Can't not infer type of the variable:") + var_name.word);
-                return DeclarVarStatementPtr(nullptr);
+                return DeclareVarStatementPtr(nullptr);
             }
         }
         _lexer.GetNextToken(); // =
         ExpressionPtr exp = ParseExpression();
 
-        auto decl_var = new DeclarVarStatement (
+        auto decl_var = new DeclareVarStatement (
             var_name.word,
             type,
             exp
         );
-        return DeclarVarStatementPtr(decl_var);
+        return DeclareVarStatementPtr(decl_var);
     }
 
-    auto Parser::ParseDeclarVarStatement() -> DeclarVarStatementPtr {
+    auto Parser::ParseDeclareVarStatement() -> DeclareVarStatementPtr {
         Token var_kw = _lexer.GetNextToken();
         if (var_kw.val != TokenType::TOKEN_KW_VAR) {
             ParseError(var_kw, "var");
-            return DeclarVarStatementPtr(nullptr);
+            return DeclareVarStatementPtr(nullptr);
         }
 
-        DeclarVarStatementPtr statement = ParseDeclarVar();
+        DeclareVarStatementPtr statement = ParseDeclarVar();
         ParseSemicolon();
 
         return statement;

@@ -13,6 +13,7 @@
 #include <system_error>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 using namespace llvm;
 
@@ -24,11 +25,12 @@ CodeGen::CodeGen(): _builder(_context) {
         {"int",      ValueType::Int},
         {"double",   ValueType::Double},
         {"bool",     ValueType::Bool},
+        {"void",     ValueType::Void},
     };
     _generator = {
         {AstType::AssignStatement, std::bind(&CodeGen::assignGen, this, std::placeholders::_1, std::placeholders::_2)},
-        {AstType::DeclarFuncStatement, std::bind(&CodeGen::declareProtoGen, this, std::placeholders::_1, std::placeholders::_2)},
-        {AstType::DeclarVarStatement, std::bind(&CodeGen::declarVarGen, this, std::placeholders::_1, std::placeholders::_2)},
+        {AstType::DeclareFuncStatement, std::bind(&CodeGen::declareProtoGen, this, std::placeholders::_1, std::placeholders::_2)},
+        {AstType::DeclareVarStatement, std::bind(&CodeGen::declareVarGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::IfStatement, std::bind(&CodeGen::ifBlockGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::RetStatement, std::bind(&CodeGen::returnGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::Expr, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
@@ -49,15 +51,12 @@ int CodeGen::initialize(){
     llvm::InitializeAllAsmParsers();
     llvm::InitializeAllAsmPrinters();
 
-    _module =  make_unique<llvm::Module>("my cool jit", _context);
+    _module =  make_unique<llvm::Module>(_module_name.c_str(), _context);
 
     auto TargetTriple = llvm::sys::getDefaultTargetTriple();
     std::string Error;
     auto Target = llvm::TargetRegistry::lookupTarget(TargetTriple, Error);
 
-    // Print an error and exit if we couldn't find the requested target.
-    // This generally occurs if we've forgotten to initialise the
-    // TargetRegistry or we have a bogus target triple.
     if (!Target) {
         llvm::errs() << Error;
         return 1;
@@ -89,7 +88,6 @@ int CodeGen::initialize(){
         return 1;
     }
   
-  //MainFuncCodegen();
   return 0;
 
 }
@@ -125,7 +123,10 @@ llvm::Type* CodeGen::getValueType(std::string type_name) {
             return llvm::Type::getInt64Ty(_context);
         case ValueType::String:
             return llvm::Type::getInt8PtrTy(_context);
+        case ValueType::Void:
+            return llvm::Type::getVoidTy(_context);
         default:
+            //TODO:
             //return llvm::StructType::get(_context);
             assert(false);
             return nullptr;
@@ -140,11 +141,11 @@ llvm::Type* CodeGen::getValueType(std::string type_name) {
 }
 
 llvm::Value* CodeGen::declareProtoGen(AstPtr ast, std::list<Environment>& env) {
-    auto funcAst = std::dynamic_pointer_cast<DeclarFuncStatement>(ast);
+    auto funcAst = std::dynamic_pointer_cast<DeclareFuncStatement>(ast);
     assert(funcAst != nullptr);
 
-    auto has_declared = _global_env.declared_prototype.find(funcAst->_name);
-    if (has_declared != _global_env.declared_prototype.end()) {
+    auto has_declared = env.front().declared_prototype.find(funcAst->_name);
+    if (has_declared != env.front().declared_prototype.end()) {
         printf("prototype:%s has declared before\n", funcAst->_name.c_str());
         exit(1);
     }
@@ -167,7 +168,7 @@ llvm::Value* CodeGen::declareProtoGen(AstPtr ast, std::list<Environment>& env) {
     llvm::Function *func =
         llvm::Function::Create(func_proto, llvm::Function::ExternalLinkage, funcAst->_name, _module.get());
     
-    _global_env.declared_prototype[funcAst->_name] = func_proto;//Todo: local func
+    env.front().declared_prototype[funcAst->_name] = func;
 
     auto decl_arg = (funcAst->_decl_vars).begin();
     for (auto &arg : func->args()) {
@@ -184,11 +185,11 @@ llvm::Value* CodeGen::declareProtoGen(AstPtr ast, std::list<Environment>& env) {
             current_env.declared_variable[arg.getName()] = Alloca;
         }
         current_env.block = block;
-        // codeGen body
+
         env.push_front(current_env);
         blockGen(funcAst->_block, env);
         env.pop_front();
-        
+
     }
     return nullptr;
 }
@@ -239,12 +240,15 @@ llvm::Value* CodeGen::exprGen(AstPtr ast, std::list<Environment>& env) {
         case AstType::NumberExpr:
             return numberExprGen(ast, env);
         case AstType::IdentifierExpr:
-            return IdentifierExprGen(ast, env);
+            return identifierExprGen(ast, env);
         case AstType::FuncCallExpr:
-            //return funcallGen(ast, env);
+            return funcallGen(ast, env);
         case AstType::StringExpr:
+            //TODO:
         case AstType::BoolExpr:
+            //TODO:
         case AstType::NilExp:
+            //TODO:
         default:
             printf("[exprGen] unknown expr type:%hhu\n", expr->GetType());
             assert(false);
@@ -277,12 +281,19 @@ llvm::Value* CodeGen::opExprGen(AstPtr ast, std::list<Environment>& env) {
         case TokenType::TOKEN_OP_DIV:
             return addExprGen(lexpr,rexpr, env);
         case TokenType::TOKEN_OP_AND:
+            //TODO:
         case TokenType::TOKEN_OP_OR:
+            //TODO:
         case TokenType::TOKEN_OP_EQ:
+            //TODO:
         case TokenType::TOKEN_OP_GE:
+            //TODO:
         case TokenType::TOKEN_OP_GT:
+            //TODO:
         case TokenType::TOKEN_OP_LE:
+            //TODO:
         case TokenType::TOKEN_OP_LT:
+            //TODO:
         default:
             printf("[opExprGen] unkown op");
             assert(false);
@@ -312,14 +323,37 @@ llvm::Value* CodeGen::numberExprGen(AstPtr expr, std::list<Environment>& env){
     assert(numberExpr != nullptr);
     auto value = llvm::ConstantFP::get(_context, llvm::APFloat(numberExpr->_number));
     return value;
-    
 }
 
 llvm::Value* CodeGen::funcallGen(AstPtr ast, std::list<Environment>& env) {
-    return nullptr;
+    auto builder = getBuilder(env);
+    auto funcall_ast = std::dynamic_pointer_cast<FuncCallExpression>(ast);
+    assert(funcall_ast);
+    auto found = env.front().declared_prototype.end();
+    for (auto& env_frame : env) {
+        found = env_frame.declared_prototype.find(funcall_ast->_identifier);
+        if (found != env_frame.declared_prototype.end()) {
+            break;
+        }
+    }
+    if (found == env.back().declared_prototype.end()) {
+        printf("Can't find func:%s\n", funcall_ast->_identifier.c_str());
+        exit(1);
+    }
+
+    auto func_proto = found->second;
+
+    std::vector<llvm::Value*> args;
+    for (auto arg_ast : funcall_ast->_parameters) {
+        auto arg =  exprGen(arg_ast, env);
+        assert(arg != nullptr);
+        args.push_back(arg);
+    }
+
+    return builder.CreateCall(func_proto, llvm::makeArrayRef(args));
 }
 
-llvm::Value* CodeGen::IdentifierExprGen(AstPtr ast, std::list<Environment>& env) {
+llvm::Value* CodeGen::identifierExprGen(AstPtr ast, std::list<Environment>& env) {
     auto idExpr = std::dynamic_pointer_cast<IdentifierExpression>(ast);
     assert(idExpr != nullptr);
     std::string id = idExpr->_identifier;
@@ -332,9 +366,9 @@ llvm::Value* CodeGen::IdentifierExprGen(AstPtr ast, std::list<Environment>& env)
     return found->second;
 }
 
-llvm::Value* CodeGen::declarVarGen(AstPtr ast, std::list<Environment>& env) {
+llvm::Value* CodeGen::declareVarGen(AstPtr ast, std::list<Environment>& env) {
     auto builder = getBuilder(env);
-    auto var_stat = std::dynamic_pointer_cast<DeclarVarStatement>(ast);
+    auto var_stat = std::dynamic_pointer_cast<DeclareVarStatement>(ast);
     assert(var_stat != nullptr);
 
     llvm::Value* var_addr = nullptr;
