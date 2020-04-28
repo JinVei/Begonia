@@ -80,7 +80,7 @@ int CodeGen::initialize(){
 
 int CodeGen::generate(AstPtr ast ) {
     std::error_code EC;
-    llvm::raw_fd_ostream out_dest(_out_filename, EC, llvm::sys::fs::OF_None);
+    llvm::raw_fd_ostream out_dest(_out_filename + ".o", EC, llvm::sys::fs::OF_None);
     if (EC) {
         llvm::errs() << "Could not open file: " << EC.message();
         return 1;
@@ -97,18 +97,17 @@ int CodeGen::generate(AstPtr ast ) {
     Environment env;
     env.block = nullptr;
     blockGen(ast, {env});
-    //MainFuncCodegen();
+
     _module->print(llvm::errs(), nullptr);
 
     pass.run(*_module);
     out_dest.flush();
 
-    // int retcode = system("llc file.ll -filetype=obj -o file.o");
-    // if (retcode != 0) 
-    //     return 1;
-    // retcode = system("ld -o test ./file.o ./output.o  -lSystem -macosx_version_min 10.14");
-    // if (retcode != 0) 
-    //     return 1;
+    std::string ld_cmd = "ld -o " + _out_filename + " ./" + _out_filename + ".o " + " -lSystem -macosx_version_min 10.14";
+
+    int retcode = system(ld_cmd.c_str());
+    if (retcode != 0) 
+        return 1;
 
     return 0;
 }

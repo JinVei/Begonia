@@ -56,7 +56,7 @@ private:
     std::map<AstType, GeneratorHandler> _generator;
     Environment                         _global_env;
     //llvm::legacy::PassManager           _pass;
-    std::string                         _out_filename = "output.o";
+    std::string                         _out_filename = "main";
     //std::shared_ptr<llvm::raw_fd_ostream> _outDestPtr;
     std::string                         _module_name = "module";
     llvm::TargetMachine*                _target_machine = nullptr;
