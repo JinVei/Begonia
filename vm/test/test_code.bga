@@ -1,11 +1,30 @@
 func test() int {
     var v1 = 1.23;
-    v1=1+v1;
+    v1=1.0+v1;
+    return 1;
 }
-func test2() void {
+
+func printf(str string) int;
+
+func test1() void {
     var v1 double;
     var foo = v1;
-    v1 = foo + 129.111;
-    test();
-    
+    var foo1 double;
+    v1 = 129.111+foo;
+    v1 = foo1+foo;
+    v1 = foo1 + 11.21;
+    var v2 = "asas";
+    printf(v2);
+    return;
+}
+
+func test2() void {
+    var v1 double;
+    var v2 = v1;
+    return;
+}
+func main() void {
+    var hello = "hello world!";
+    printf(hello);
+    return;
 }

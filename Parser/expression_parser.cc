@@ -132,7 +132,11 @@ namespace begonia {
 
         case TokenType::TOKEN_NUMBER:
             token = _lexer.GetNextToken();
-            return NumberExpressionPtr(new NumberExpression{std::stod(token.word)});
+            if (token.word.find('.') == std::string::npos) {
+                return NumberExpressionPtr(new NumberExpression{std::stod(token.word), false});
+            } else {
+                return NumberExpressionPtr(new NumberExpression{std::stod(token.word), true});
+            }
             break;
 
         case TokenType::TOKEN_STRING:

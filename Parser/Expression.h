@@ -43,8 +43,10 @@ namespace begonia
 
     struct NumberExpression: public Expression {
         double  _number;
-        NumberExpression(double number){
+        bool    _is_float;
+        NumberExpression(double number, bool is_float){
             _number = number;
+            _is_float = is_float;
             _type = AstType::NumberExpr;
         }
     };

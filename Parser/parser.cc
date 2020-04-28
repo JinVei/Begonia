@@ -180,9 +180,11 @@ namespace begonia
         if (return_token.val != TokenType::TOKEN_KW_RETURN) {
             ParseError(return_token, "return");
         }
-
         std::vector<ExpressionPtr> return_val;
-        return_val = ParseMultipleExpression();
+        Token try_token = _lexer.LookAhead(0);
+        if (try_token.val != TokenType::TOKEN_SEP_SEMICOLON) {
+            return_val = ParseMultipleExpression();
+        }
         ParseSemicolon();
 
         return ReturnStatementPtr(new ReturnStatement(return_val));

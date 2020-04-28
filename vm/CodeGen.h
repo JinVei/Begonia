@@ -64,6 +64,7 @@ private:
 
     llvm::Type* getValueType(std::string type_name);
     llvm::Type* getPointerOriginType(llvm::Value* pointer_type);
+    bool isDoubleType(llvm::Value* v);
 
     llvm::Value* declareProtoGen(AstPtr, std::list<Environment>&);
     llvm::Value* assignGen(AstPtr, std::list<Environment>&);

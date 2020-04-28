@@ -101,7 +101,6 @@ int CodeGen::generate(AstPtr ast ) {
     _module->print(llvm::errs(), nullptr);
 
     pass.run(*_module);
-    assert(false&&"run(module)");
     out_dest.flush();
 
     // int retcode = system("llc file.ll -filetype=obj -o file.o");
@@ -196,6 +195,7 @@ llvm::Value* CodeGen::declareProtoGen(AstPtr ast, std::list<Environment>& env) {
         env.pop_front();
 
     }
+    llvm::verifyFunction(*func);
     return nullptr;
 }
 
@@ -315,10 +315,26 @@ llvm::IRBuilder<> CodeGen::getBuilder(std::list<Environment>& env){
 
 }
 
+bool CodeGen::isDoubleType(llvm::Value* v){
+    bool is_double = v->getType()->isDoubleTy();
+    bool is_double_pt = v->getType()->isPointerTy() && v->getType()->getPointerElementType() == llvm::Type::getDoubleTy(_context);
+    return is_double || is_double_pt;
+}
+
 llvm::Value* CodeGen::addExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::list<Environment>& env){
     auto builder = getBuilder(env);
     auto lval = exprGen(lexpr, env);
     auto rval = exprGen(rexpr, env);
+    if (!isDoubleType(lval) || !isDoubleType(rval)){
+        assert(false&&"expr type no match double type");
+        return nullptr;
+    }
+    if(rval->getType()->isPointerTy()){
+        rval = builder.CreateLoad(llvm::Type::getDoubleTy(_context), rval);
+    }
+    if(lval->getType()->isPointerTy()){
+        lval = builder.CreateLoad(llvm::Type::getDoubleTy(_context), lval);
+    }
     auto val = builder.CreateFAdd(lval, rval);
     return val;
 }
@@ -326,9 +342,8 @@ llvm::Value* CodeGen::addExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::
 llvm::Value* CodeGen::numberExprGen(AstPtr expr, std::list<Environment>& env){
     NumberExpressionPtr numberExpr = std::dynamic_pointer_cast<NumberExpression>(expr);
     assert(numberExpr != nullptr);
-    double diff = numberExpr->_number - long(numberExpr->_number);
     llvm::Value* value;
-    if (fabs(diff) > std::numeric_limits<double>::epsilon()) {
+    if (numberExpr->_is_float) {
         value = llvm::ConstantFP::get(_context, llvm::APFloat(numberExpr->_number));
     } else {
         value = llvm::ConstantInt::get(llvm::Type::getInt64Ty(_context), long(numberExpr->_number));
@@ -426,6 +441,15 @@ llvm::Value* CodeGen::ifBlockGen(AstPtr ast, std::list<Environment>& env) {
     return nullptr;
 }
 llvm::Value* CodeGen::returnGen(AstPtr ast, std::list<Environment>& env) {
+    auto builder = getBuilder(env);
+    auto ret_stat = std::dynamic_pointer_cast<ReturnStatement>(ast);
+    assert(ret_stat != nullptr);
+    if (ret_stat->_ret_values.size() == 0) {
+        builder.CreateRetVoid();
+    } else {
+        auto ret_val = exprGen(ret_stat->_ret_values[0], env);
+        builder.CreateRet(ret_val);
+    }
     return nullptr;
 }
 llvm::Value* CodeGen::whileBlockGen(AstPtr ast, std::list<Environment>& env) {
