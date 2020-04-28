@@ -55,13 +55,15 @@ private:
     std::map<std::string, ValueType>    _basic_variable_type;
     std::map<AstType, GeneratorHandler> _generator;
     Environment                         _global_env;
-    llvm::legacy::PassManager           _pass;
-    std::string                         _outFilename = "output.o";
-    std::shared_ptr<llvm::raw_fd_ostream> _outDestPtr;
+    //llvm::legacy::PassManager           _pass;
+    std::string                         _out_filename = "output.o";
+    //std::shared_ptr<llvm::raw_fd_ostream> _outDestPtr;
     std::string                         _module_name = "module";
+    llvm::TargetMachine*                _target_machine = nullptr;
 
 
     llvm::Type* getValueType(std::string type_name);
+    llvm::Type* getPointerOriginType(llvm::Value* pointer_type);
 
     llvm::Value* declareProtoGen(AstPtr, std::list<Environment>&);
     llvm::Value* assignGen(AstPtr, std::list<Environment>&);
@@ -76,8 +78,11 @@ private:
     llvm::Value* numberExprGen(AstPtr, std::list<Environment>&);
     llvm::Value* blockGen(AstPtr, std::list<Environment>);
     llvm::Value* identifierExprGen(AstPtr, std::list<Environment>&);
+    llvm::Value* BoolExprGen(AstPtr, std::list<Environment>&);
+    llvm::Value* StringExprGen(AstPtr, std::list<Environment>&);
 
     llvm::IRBuilder<> getBuilder(std::list<Environment>& env);
+    void MainFuncCodegen();
 };
 
 } //begonia

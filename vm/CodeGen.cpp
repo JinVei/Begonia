@@ -66,38 +66,43 @@ int CodeGen::initialize(){
 
     llvm::TargetOptions opt;
     auto RM = llvm::Optional<llvm::Reloc::Model>();
-    auto TargetMachine = Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
-    auto layout = TargetMachine->createDataLayout();
+    _target_machine = Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
+    auto layout = _target_machine->createDataLayout();
     _module->setDataLayout(layout);
     _module->setTargetTriple(TargetTriple);
 
-    auto Filename = "output.o";
-    std::error_code EC;
-    _outDestPtr = std::shared_ptr<llvm::raw_fd_ostream> (new llvm::raw_fd_ostream(Filename, EC, llvm::sys::fs::OF_None));
-    
-    if (EC) {
-        llvm::errs() << "Could not open file: " << EC.message();
-        return 1;
-    }
 
-    llvm::legacy::PassManager pass;
-    auto FileType = llvm::TargetMachine::CGFT_ObjectFile;
-
-    if (TargetMachine->addPassesToEmitFile(pass, *_outDestPtr, nullptr, FileType)) {
-        llvm::errs() << "TheTargetMachine can't emit a file of this type";
-        return 1;
-    }
+    //llvm::legacy::PassManager pass;
   
   return 0;
 
 }
 
 int CodeGen::generate(AstPtr ast ) {
+    std::error_code EC;
+    llvm::raw_fd_ostream out_dest(_out_filename, EC, llvm::sys::fs::OF_None);
+    if (EC) {
+        llvm::errs() << "Could not open file: " << EC.message();
+        return 1;
+    }
+
+    auto FileType = llvm::TargetMachine::CGFT_ObjectFile;
+
+    llvm::legacy::PassManager           pass;
+    if (_target_machine->addPassesToEmitFile(pass, out_dest, nullptr, FileType)) {
+        llvm::errs() << "TheTargetMachine can't emit a file of this type";
+        return 1;
+    }
+
     Environment env;
     env.block = nullptr;
     blockGen(ast, {env});
-    _pass.run(*_module);
-    _outDestPtr->flush();
+    //MainFuncCodegen();
+    _module->print(llvm::errs(), nullptr);
+
+    pass.run(*_module);
+    assert(false&&"run(module)");
+    out_dest.flush();
 
     // int retcode = system("llc file.ll -filetype=obj -o file.o");
     // if (retcode != 0) 
@@ -105,8 +110,6 @@ int CodeGen::generate(AstPtr ast ) {
     // retcode = system("ld -o test ./file.o ./output.o  -lSystem -macosx_version_min 10.14");
     // if (retcode != 0) 
     //     return 1;
-
-    _module->print(llvm::errs(), nullptr);
 
     return 0;
 }
@@ -128,10 +131,12 @@ llvm::Type* CodeGen::getValueType(std::string type_name) {
         default:
             //TODO:
             //return llvm::StructType::get(_context);
+            printf("Unknown type:%s\n", type_name.c_str());
             assert(false);
             return nullptr;
         }
     } else {
+        printf("Unknown type:%s\n", type_name.c_str());
         assert(false);
     }
     
@@ -243,10 +248,10 @@ llvm::Value* CodeGen::exprGen(AstPtr ast, std::list<Environment>& env) {
             return identifierExprGen(ast, env);
         case AstType::FuncCallExpr:
             return funcallGen(ast, env);
-        case AstType::StringExpr:
-            //TODO:
         case AstType::BoolExpr:
-            //TODO:
+            return BoolExprGen(ast, env);
+        case AstType::StringExpr:
+            return StringExprGen(ast, env);
         case AstType::NilExp:
             //TODO:
         default:
@@ -321,7 +326,13 @@ llvm::Value* CodeGen::addExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::
 llvm::Value* CodeGen::numberExprGen(AstPtr expr, std::list<Environment>& env){
     NumberExpressionPtr numberExpr = std::dynamic_pointer_cast<NumberExpression>(expr);
     assert(numberExpr != nullptr);
-    auto value = llvm::ConstantFP::get(_context, llvm::APFloat(numberExpr->_number));
+    double diff = numberExpr->_number - long(numberExpr->_number);
+    llvm::Value* value;
+    if (fabs(diff) > std::numeric_limits<double>::epsilon()) {
+        value = llvm::ConstantFP::get(_context, llvm::APFloat(numberExpr->_number));
+    } else {
+        value = llvm::ConstantInt::get(llvm::Type::getInt64Ty(_context), long(numberExpr->_number));
+    }
     return value;
 }
 
@@ -354,9 +365,9 @@ llvm::Value* CodeGen::funcallGen(AstPtr ast, std::list<Environment>& env) {
 }
 
 llvm::Value* CodeGen::identifierExprGen(AstPtr ast, std::list<Environment>& env) {
-    auto idExpr = std::dynamic_pointer_cast<IdentifierExpression>(ast);
-    assert(idExpr != nullptr);
-    std::string id = idExpr->_identifier;
+    auto id_expr = std::dynamic_pointer_cast<IdentifierExpression>(ast);
+    assert(id_expr != nullptr);
+    std::string id = id_expr->_identifier;
     auto found = env.front().declared_variable.find(id);
     if (found == env.front().declared_variable.end()) {
         printf("Can't find identifier:%s\n", id.c_str());
@@ -364,6 +375,21 @@ llvm::Value* CodeGen::identifierExprGen(AstPtr ast, std::list<Environment>& env)
         return nullptr;
     }
     return found->second;
+}
+
+llvm::Value* CodeGen::BoolExprGen(AstPtr ast, std::list<Environment>& env) {
+    auto bool_expr = std::dynamic_pointer_cast<BoolExpression>(ast);
+    assert(bool_expr != nullptr);
+    auto value = llvm::ConstantInt::get(llvm::Type::getInt1Ty(_context), bool_expr->_value);
+    return value;
+}
+
+llvm::Value* CodeGen::StringExprGen(AstPtr ast , std::list<Environment>& env) {
+    auto builder = getBuilder(env);
+    auto str_expr = std::dynamic_pointer_cast<StringExpression>(ast);
+    assert(str_expr != nullptr);
+    auto value = builder.CreateGlobalStringPtr(str_expr->_string);
+    return value;
 }
 
 llvm::Value* CodeGen::declareVarGen(AstPtr ast, std::list<Environment>& env) {
@@ -374,20 +400,28 @@ llvm::Value* CodeGen::declareVarGen(AstPtr ast, std::list<Environment>& env) {
     llvm::Value* var_addr = nullptr;
     if (var_stat->_type != "") {
         var_addr = builder.CreateAlloca(getValueType(var_stat->_type));
-    } else if (var_stat->_assign_value != nullptr) {
+    
+    }else if (var_stat->_assign_value != nullptr) {
         llvm::Value* assign_value = exprGen(var_stat->_assign_value, env);
         assert(assign_value != nullptr);
-        var_addr = builder.CreateAlloca(assign_value->getType());
+        if (assign_value->getType()->isPointerTy()
+         && assign_value->getType() != llvm::Type::getInt8PtrTy(_context)) {
+            var_addr = builder.CreateAlloca(assign_value->getType()->getPointerElementType());
+            assign_value->getType()->getContainedType(0)->print(llvm::errs());
+        } else {
+            var_addr = builder.CreateAlloca(assign_value->getType());
+        }
+
         builder.CreateStore(assign_value, var_addr);
-        
     } else{
-        assert(false);
+        assert(false&&"Unkown type for define variable");
     }
 
     env.front().declared_variable[var_stat->_name] = var_addr;
     
     return nullptr;
 }
+
 llvm::Value* CodeGen::ifBlockGen(AstPtr ast, std::list<Environment>& env) {
     return nullptr;
 }
