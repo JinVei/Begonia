@@ -230,7 +230,9 @@ llvm::Value* CodeGen::assignGen(AstPtr ast, std::list<Environment>& env) {
 
     auto val_expr = assignAst->_assign_value;
     auto val = exprGen(val_expr, env);
-
+    if(val->getType()->isPointerTy() && val->getType() != llvm::Type::getInt8PtrTy(_context)){
+        val = builder.CreateLoad(val->getType()->getPointerElementType(), val);
+    }
     builder.CreateStore(val, var_addr);
     return nullptr;
 }
@@ -372,6 +374,9 @@ llvm::Value* CodeGen::funcallGen(AstPtr ast, std::list<Environment>& env) {
     std::vector<llvm::Value*> args;
     for (auto arg_ast : funcall_ast->_parameters) {
         auto arg =  exprGen(arg_ast, env);
+        if(arg->getType()->isPointerTy() && arg->getType() != llvm::Type::getInt8PtrTy(_context)){
+            arg = builder.CreateLoad(arg->getType()->getPointerElementType(), arg);
+        }
         assert(arg != nullptr);
         args.push_back(arg);
     }

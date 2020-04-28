@@ -18,13 +18,20 @@ func test1() void {
     return;
 }
 
-func test2() void {
+func test2(a double) void {
     var v1 double;
     var v2 = v1;
     return;
 }
+
 func main() void {
     var hello = "hello world!";
+    var num = 0.0;
+    var hi string;
+    var num2 double;
     printf(hello);
+    test2(num);
+    num2 = num;
+    hi = hello;
     return;
 }

@@ -34,5 +34,9 @@ int main() {
         return 1;
     }
     generator.generate(parser._ast);
+
+    int retcode = system("ld -o test_code ./output.o  -lSystem -macosx_version_min 10.14");
+    if (retcode != 0) 
+        return 1;
     return 0;
 }
