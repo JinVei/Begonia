@@ -55,9 +55,7 @@ private:
     std::map<std::string, ValueType>    _basic_variable_type;
     std::map<AstType, GeneratorHandler> _generator;
     Environment                         _global_env;
-    //llvm::legacy::PassManager           _pass;
-    std::string                         _out_filename = "main";
-    //std::shared_ptr<llvm::raw_fd_ostream> _outDestPtr;
+    std::string                         _out_filename = "out";
     std::string                         _module_name = "module";
     llvm::TargetMachine*                _target_machine = nullptr;
 
@@ -68,7 +66,7 @@ private:
 
     llvm::Value* declareProtoGen(AstPtr, std::list<Environment>&);
     llvm::Value* assignGen(AstPtr, std::list<Environment>&);
-    llvm::Value* funcallGen(AstPtr, std::list<Environment>&);
+    llvm::Value* funcCallGen(AstPtr, std::list<Environment>&);
     llvm::Value* declareVarGen(AstPtr, std::list<Environment>&);
     llvm::Value* ifBlockGen(AstPtr, std::list<Environment>&);
     llvm::Value* returnGen(AstPtr, std::list<Environment>&);
