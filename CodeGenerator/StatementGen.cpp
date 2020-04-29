@@ -243,37 +243,6 @@ llvm::IRBuilder<> CodeGen::getBuilder(std::list<Environment>& env){
 
 }
 
-llvm::Value* CodeGen::funcCallGen(AstPtr ast, std::list<Environment>& env) {
-    auto builder = getBuilder(env);
-    auto funcall_ast = std::dynamic_pointer_cast<FuncCallExpression>(ast);
-    assert(funcall_ast);
-    auto found = env.front().declared_prototype.end();
-    for (auto& env_frame : env) {
-        found = env_frame.declared_prototype.find(funcall_ast->_identifier);
-        if (found != env_frame.declared_prototype.end()) {
-            break;
-        }
-    }
-    if (found == env.back().declared_prototype.end()) {
-        printf("Can't find func:%s\n", funcall_ast->_identifier.c_str());
-        exit(1);
-    }
-
-    auto func_proto = found->second;
-
-    std::vector<llvm::Value*> args;
-    for (auto arg_ast : funcall_ast->_parameters) {
-        auto arg =  exprGen(arg_ast, env);
-        if(arg->getType()->isPointerTy() && arg->getType() != llvm::Type::getInt8PtrTy(_context)){
-            arg = builder.CreateLoad(arg->getType()->getPointerElementType(), arg);
-        }
-        assert(arg != nullptr);
-        args.push_back(arg);
-    }
-
-    return builder.CreateCall(func_proto, llvm::makeArrayRef(args));
-}
-
 llvm::Value* CodeGen::declareVarGen(AstPtr ast, std::list<Environment>& env) {
     auto builder = getBuilder(env);
     auto var_stat = std::dynamic_pointer_cast<DeclareVarStatement>(ast);
