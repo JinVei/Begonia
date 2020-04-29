@@ -2,3 +2,7 @@ Lexer/test/TestLexer
 Lexer/test/a.out
 Parser/test/TestParser
 .DS_Store
+Begonia.vcxproj.user
+Begonia.vcxproj.filters
+Debug/*
+.vs/*

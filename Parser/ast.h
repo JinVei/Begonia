@@ -5,29 +5,24 @@
 
 namespace begonia {
 
-#define GENERATE_ENUM(X) X,
-
-#define ALL_AST_TYPES(FUNCTION)     \
-    FUNCTION(Unknown)               \
-    FUNCTION(Block)                 \
-    FUNCTION(IfStatement)           \
-    FUNCTION(AssignStatement)       \
-    FUNCTION(DeclareVarStatement)    \
-    FUNCTION(DeclareFuncStatement)   \
-    FUNCTION(WhileStatement)        \
-    FUNCTION(RetStatement)          \
-    FUNCTION(Expr)                  \
-    FUNCTION(FuncCallExpr)          \
-    FUNCTION(OpExpr)                \
-    FUNCTION(BoolExpr)              \
-    FUNCTION(NilExp)                \
-    FUNCTION(NumberExpr)            \
-    FUNCTION(StringExpr)            \
-    FUNCTION(IdentifierExpr)        \
-    FUNCTION(Semicolon)             \
-
-enum class AstType: uint8_t{
-    ALL_AST_TYPES(GENERATE_ENUM)
+enum class AstType: uint8_t {
+    Unknown,
+    Block,   
+    IfStatement,
+    AssignStatement,
+    DeclareVarStatement,
+    DeclareFuncStatement,
+    WhileStatement,
+    RetStatement,
+    Expr,
+    FuncCallExpr,
+    OpExpr,
+    BoolExpr,
+    NilExp,
+    NumberExpr,
+    StringExpr,
+    IdentifierExpr,
+    Semicolon
 };
 struct AST {
     AstType _type;
@@ -38,7 +33,6 @@ struct AST {
         return _type;
     }
 };
-
 using AstPtr = std::shared_ptr<AST>;
 
 } // begonia

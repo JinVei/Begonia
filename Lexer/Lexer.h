@@ -72,6 +72,12 @@ namespace begonia
 
     class Lexer
     {
+    public:
+        ~Lexer();
+        Lexer(std::string file_name);
+        Token GetNextToken();
+        Token LookAhead(size_t step);
+
     private:
         bool SkipWhitespaceAndEmptyline();
 
@@ -87,19 +93,8 @@ namespace begonia
         auto GetWord() -> std::string;
 
         void Interrupt(std::string);
-
         Token NextToken();
-
         void initKeyWord();
-
-    public:
-        ~Lexer();
-        Lexer(std::string file_name);
-        Token GetNextToken();
-        Token LookAhead(size_t step);
-
-        std::map<std::string, TokenType>    key_word_type_;
-        std::map<TokenType, std::string>    key_word_;
 
     private:
         std::ifstream       source_;
@@ -108,9 +103,12 @@ namespace begonia
         long                current_line_ = 0;
         bool                is_ready_;
         Token               next_token_;
-        uint8_t             acceptable_Chars_[256] = {0};
+        uint8_t             acceptable_Chars_[256] = { 0 };
         std::vector<Token>  tokens_;
         size_t              token_index_ = 0;
+
+        std::map<std::string, TokenType>    key_word_type_;
+        std::map<TokenType, std::string>    key_word_;
     };
 }
 #endif

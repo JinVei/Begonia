@@ -1,7 +1,7 @@
 #ifndef BEGONIA_STATEMENT_H
 #define BEGONIA_STATEMENT_H
 #include "Expression.h"
-#include "ast.h"
+#include "AST.h"
 
 #include <vector>
 #include <memory>

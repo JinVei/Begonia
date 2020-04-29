@@ -1,6 +1,6 @@
 #ifndef BEGONIA_EXPRESSION_H
 #define BEGONIA_EXPRESSION_H
-#include "ast.h"
+#include "AST.h"
 
 #include <memory>
 #include <vector>
