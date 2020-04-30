@@ -4,6 +4,12 @@ func main() void {
     printf("hello world\n");
     var sum = 1.11;
     var sum2 = sum + 1.22;
-    printf("%f\n", sum2);
+    printf("sum2=sum + 1.22=%f\n", sum2);
+    sum2 = sum2 - 2.0;
+    printf("sum2=sum2 - 2.0=%f\n", sum2);
+    sum = sum2 * 99.1;
+    printf("sum = sum2 * 99=%f\n", sum);
+    sum = sum/6.0;
+    printf("sum = sum = sum/6=%f\n", sum);
     return;
 }

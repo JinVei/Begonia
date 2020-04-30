@@ -74,6 +74,9 @@ private:
     llvm::Value* exprGen(AstPtr, std::list<Environment>&);
     llvm::Value* opExprGen(AstPtr, std::list<Environment>&);
     llvm::Value* addExprGen(ExpressionPtr, ExpressionPtr, std::list<Environment>&);
+    llvm::Value* subExprGen(ExpressionPtr, ExpressionPtr, std::list<Environment>&);
+    llvm::Value* mulExprGen(ExpressionPtr, ExpressionPtr, std::list<Environment>&);
+    llvm::Value* divExprGen(ExpressionPtr, ExpressionPtr, std::list<Environment>&);
     llvm::Value* numberExprGen(AstPtr, std::list<Environment>&);
     llvm::Value* blockGen(AstPtr, std::list<Environment>);
     llvm::Value* identifierExprGen(AstPtr, std::list<Environment>&);

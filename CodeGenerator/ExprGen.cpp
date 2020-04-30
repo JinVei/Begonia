@@ -58,11 +58,11 @@ llvm::Value* CodeGen::opExprGen(AstPtr ast, std::list<Environment>& env) {
         case TokenType::TOKEN_OP_ADD:
             return addExprGen(lexpr,rexpr, env);
         case TokenType::TOKEN_OP_SUB:
-            return addExprGen(lexpr,rexpr, env);
+            return subExprGen(lexpr,rexpr, env);
         case TokenType::TOKEN_OP_MUL:
-            return addExprGen(lexpr,rexpr, env);
+            return mulExprGen(lexpr,rexpr, env);
         case TokenType::TOKEN_OP_DIV:
-            return addExprGen(lexpr,rexpr, env);
+            return divExprGen(lexpr,rexpr, env);
         case TokenType::TOKEN_OP_AND:
             //TODO:
         case TokenType::TOKEN_OP_OR:
@@ -99,6 +99,59 @@ llvm::Value* CodeGen::addExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::
         lval = builder.CreateLoad(llvm::Type::getDoubleTy(_context), lval);
     }
     auto val = builder.CreateFAdd(lval, rval);
+    return val;
+}
+
+llvm::Value* CodeGen::subExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::list<Environment>& env){
+    auto builder = getBuilder(env);
+    auto lval = exprGen(lexpr, env);
+    auto rval = exprGen(rexpr, env);
+    if (!isDoubleType(lval) || !isDoubleType(rval)){
+        assert(false&&"expr type no match double type");
+        return nullptr;
+    }
+    if(rval->getType()->isPointerTy()){
+        rval = builder.CreateLoad(llvm::Type::getDoubleTy(_context), rval);
+    }
+    if(lval->getType()->isPointerTy()){
+        lval = builder.CreateLoad(llvm::Type::getDoubleTy(_context), lval);
+    }
+    auto val = builder.CreateFSub(lval, rval);
+    return val;
+}
+
+llvm::Value* CodeGen::mulExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::list<Environment>& env){
+    auto builder = getBuilder(env);
+    auto lval = exprGen(lexpr, env);
+    auto rval = exprGen(rexpr, env);
+    if (!isDoubleType(lval) || !isDoubleType(rval)){
+        assert(false&&"expr type no match double type");
+        return nullptr;
+    }
+    if(rval->getType()->isPointerTy()){
+        rval = builder.CreateLoad(llvm::Type::getDoubleTy(_context), rval);
+    }
+    if(lval->getType()->isPointerTy()){
+        lval = builder.CreateLoad(llvm::Type::getDoubleTy(_context), lval);
+    }
+    auto val = builder.CreateFMul(lval, rval);
+    return val;
+}
+llvm::Value* CodeGen::divExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::list<Environment>& env){
+    auto builder = getBuilder(env);
+    auto lval = exprGen(lexpr, env);
+    auto rval = exprGen(rexpr, env);
+    if (!isDoubleType(lval) || !isDoubleType(rval)){
+        assert(false&&"expr type no match double type");
+        return nullptr;
+    }
+    if(rval->getType()->isPointerTy()){
+        rval = builder.CreateLoad(llvm::Type::getDoubleTy(_context), rval);
+    }
+    if(lval->getType()->isPointerTy()){
+        lval = builder.CreateLoad(llvm::Type::getDoubleTy(_context), lval);
+    }
+    auto val = builder.CreateFDiv(lval, rval);
     return val;
 }
 
