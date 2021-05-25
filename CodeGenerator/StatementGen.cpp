@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 #include <iostream>
+#include <list>
 
 namespace begonia {
 
@@ -194,11 +195,74 @@ llvm::Value* CodeGen::returnGen(AstPtr ast, std::list<Environment>& env) {
     return nullptr;
 }
 
-llvm::Value* CodeGen::whileBlockGen(AstPtr ast, std::list<Environment>& env) {
+llvm::Value* CodeGen::whileStatementGen(AstPtr ast, std::list<Environment>& env) {
     return nullptr;
 }
 
-llvm::Value* CodeGen::ifBlockGen(AstPtr ast, std::list<Environment>& env) {
+llvm::Value* CodeGen::ifBlockGen(std::list<Environment>& env, IfBlock ast, llvm::BasicBlock* block, llvm::BasicBlock* branch) {
+    auto builder = getBuilder(env);
+    Environment frame;
+    frame.block = block;
+    env.push_front(frame);
+    builder.SetInsertPoint(block);
+    auto cond_expr = ast._cond;
+    auto cond_val = exprGen(cond_expr, env);
+    builder.CreateCondBr(cond_val, block, branch);
+    blockGen(ast._block, env);
+
+    env.pop_front();
+    return nullptr;
+}
+
+llvm::Value* CodeGen::elseBlockGen(std::list<Environment>& env, AstBlockPtr block, llvm::BasicBlock* merge) {
+    auto builder = getBuilder(env);
+    Environment frame;
+    frame.block = block;
+    env.push_front(frame);
+    builder.SetInsertPoint(block);
+    blockGen(ast._block, env);
+    // branch to MergeBlock
+    env.pop_front();
+    return nullptr;
+}
+
+llvm::Value* CodeGen::ifStatementGen(AstPtr ast, std::list<Environment>& env) {
+    auto builder = getBuilder(env);
+    auto if_stat = std::dynamic_pointer_cast<IfStatement>(ast);
+    assert(if_stat != nullptr);
+
+    auto paren_func = builder.GetInsertBlock()->getParent();
+    int64_t if_block_id = env.front().if_block_num;
+
+    auto merge_block = llvm::BasicBlock::Create(_context, std::to_string(if_block_id++) + "merge", paren_func);
+    llvm::BasicBlock *else_block = nullptr;
+    if (if_stat->_else_block != nullptr) {
+        else_block = llvm::BasicBlock::Create(_context, std::to_string(if_block_id++) + "else", paren_func);
+    }
+
+    std::vector<llvm::BasicBlock*> if_blocks;
+    for(size_t i=0; i < if_stat->_if_blocks.size(); i++) {
+        auto block = llvm::BasicBlock::Create(_context, std::to_string(if_block_id++) + "if", paren_func);
+        if_blocks.push_back(block);
+    }
+    size_t if_block_num = if_stat->_if_blocks.size();
+    auto block_ast = if_stat->_if_blocks;
+    assert(block_ast.size() > 0);
+    for(size_t i=0; i<if_block_num-1; i++) {
+        ifBlockGen(env, block_ast[i], if_blocks[i], if_blocks[i+1]);
+    }
+
+    if (else_block != nullptr) {
+        ifBlockGen(env, block_ast[if_block_num-1], if_blocks[if_block_num-1], else_block);
+        assert(false&&"ifStatementGen1");
+        elseBlockGen(env, if_stat->_else_block, merge_block);
+    } else {
+        ifBlockGen(env, block_ast[if_block_num-1], if_blocks[if_block_num-1], merge_block);
+        assert(false&&"ifStatementGen2");
+    }
+
+    builder.SetInsertPoint(merge_block);
+
     return nullptr;
 }
 

@@ -11,5 +11,8 @@ func main() void {
     printf("sum = sum2 * 99=%f\n", sum);
     sum = sum/6.0;
     printf("sum = sum = sum/6=%f\n", sum);
+    if sum {
+
+    }
     return;
 }

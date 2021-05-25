@@ -348,8 +348,8 @@ namespace begonia
             return IfStatementPtr(nullptr);
         }
 
-        std::list<IfBlock> if_blocks;
-        AstBlockPtr else_block(new AstBlock{});
+        std::vector<IfBlock> if_blocks;
+        AstBlockPtr else_block;
 
         ExpressionPtr if_cond_exp = ParseExpression();
 

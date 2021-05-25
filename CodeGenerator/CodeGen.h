@@ -24,6 +24,8 @@
 #include "Parser.h"
 #include "Expression.h"
 
+#include <list>
+
 namespace begonia {
 //class 
 class CodeGen {
@@ -41,6 +43,7 @@ public:
         std::map<std::string, llvm::Value*>         declared_variable;
         std::map<std::string, llvm::Function *>     declared_prototype;
         llvm::BasicBlock*                           block;
+        uint64_t                                    if_block_num = 0;
     };
     using GeneratorHandler = std::function<llvm::Value*(AstPtr,std::list<Environment>&)>;
 
@@ -68,9 +71,12 @@ private:
     llvm::Value* assignGen(AstPtr, std::list<Environment>&);
     llvm::Value* funcCallGen(AstPtr, std::list<Environment>&);
     llvm::Value* declareVarGen(AstPtr, std::list<Environment>&);
-    llvm::Value* ifBlockGen(AstPtr, std::list<Environment>&);
+    llvm::Value* ifStatementGen(AstPtr, std::list<Environment>&);
     llvm::Value* returnGen(AstPtr, std::list<Environment>&);
-    llvm::Value* whileBlockGen(AstPtr, std::list<Environment>&);
+    llvm::Value* whileStatementGen(AstPtr, std::list<Environment>&);
+    llvm::Value* ifBlockGen(std::list<Environment>& env, IfBlock ast, llvm::BasicBlock* block, llvm::BasicBlock* branch, llvm::BasicBlock* merge);
+    llvm::Value* elseBlockGen(std::list<Environment>& env, AstBlockPtr ast, llvm::BasicBlock* merge);
+
     llvm::Value* exprGen(AstPtr, std::list<Environment>&);
     llvm::Value* opExprGen(AstPtr, std::list<Environment>&);
     llvm::Value* addExprGen(ExpressionPtr, ExpressionPtr, std::list<Environment>&);
@@ -81,7 +87,7 @@ private:
     llvm::Value* blockGen(AstPtr, std::list<Environment>);
     llvm::Value* identifierExprGen(AstPtr, std::list<Environment>&);
     llvm::Value* BoolExprGen(AstPtr, std::list<Environment>&);
-    llvm::Value* StringExprGen(AstPtr, std::list<Environment>&);
+    llvm::Value* stringExprGen(AstPtr, std::list<Environment>&);
 
     llvm::IRBuilder<> getBuilder(std::list<Environment>& env);
     void MainFuncCodegen();

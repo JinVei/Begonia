@@ -30,7 +30,7 @@ llvm::Value* CodeGen::exprGen(AstPtr ast, std::list<Environment>& env) {
         case AstType::BoolExpr:
             return BoolExprGen(ast, env);
         case AstType::StringExpr:
-            return StringExprGen(ast, env);
+            return stringExprGen(ast, env);
         case AstType::NilExp:
             //TODO:
         default:
@@ -167,7 +167,7 @@ llvm::Value* CodeGen::numberExprGen(AstPtr expr, std::list<Environment>& env){
     return value;
 }
 
-llvm::Value* CodeGen::StringExprGen(AstPtr ast , std::list<Environment>& env) {
+llvm::Value* CodeGen::stringExprGen(AstPtr ast , std::list<Environment>& env) {
     auto builder = getBuilder(env);
     auto str_expr = std::dynamic_pointer_cast<StringExpression>(ast);
     assert(str_expr != nullptr);
@@ -180,12 +180,24 @@ llvm::Value* CodeGen::identifierExprGen(AstPtr ast, std::list<Environment>& env)
     auto id_expr = std::dynamic_pointer_cast<IdentifierExpression>(ast);
     assert(id_expr != nullptr);
     std::string id = id_expr->_identifier;
-    auto found = env.front().declared_variable.find(id);
-    if (found == env.front().declared_variable.end()) {
-        printf("Can't find identifier:%s\n", id.c_str());
-        exit(1);
-        return nullptr;
+    // auto found = env.front().declared_variable.find(id);
+    // if (found == env.front().declared_variable.end()) {
+    //     printf("Can't find identifier:%s\n", id.c_str());
+    //     exit(1);
+    //     return nullptr;
+    // }
+    auto found = env.front().declared_variable.end();
+    for (auto& env_frame : env) {
+        found = env_frame.declared_variable.find(id);
+        if (found != env_frame.declared_variable.end()) {
+            break;
+        }
     }
+    if (found == env.back().declared_variable.end()) {
+        printf("Can't find func:%s\n", id.c_str());
+        exit(1);
+    }
+
     return found->second;
 }
 

@@ -19,7 +19,7 @@ CodeGen::CodeGen(): _builder(_context) {
         {AstType::AssignStatement, std::bind(&CodeGen::assignGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::DeclareFuncStatement, std::bind(&CodeGen::declareProtoGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::DeclareVarStatement, std::bind(&CodeGen::declareVarGen, this, std::placeholders::_1, std::placeholders::_2)},
-        {AstType::IfStatement, std::bind(&CodeGen::ifBlockGen, this, std::placeholders::_1, std::placeholders::_2)},
+        {AstType::IfStatement, std::bind(&CodeGen::ifStatementGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::RetStatement, std::bind(&CodeGen::returnGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::Expr, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::FuncCallExpr, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},

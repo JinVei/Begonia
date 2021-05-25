@@ -26,10 +26,10 @@ namespace begonia
         ExpressionPtr       _cond;
     };
     struct IfStatement: public  Statement {
-        std::list<IfBlock>  _if_blocks;
+        std::vector<IfBlock>   _if_blocks;
         AstBlockPtr            _else_block;
 
-        IfStatement(std::list<IfBlock> if_block, AstBlockPtr else_block) {
+        IfStatement(std::vector<IfBlock> if_block, AstBlockPtr else_block) {
             _if_blocks = if_block;
             _else_block = else_block;
         }
