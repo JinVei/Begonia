@@ -12,7 +12,12 @@ func main() void {
     sum = sum/6.0;
     printf("sum = sum = sum/6=%f\n", sum);
     if sum {
-
+        printf("hi1");
+    } elif sum {
+        printf("hi2");
+    } else {
+        printf("hi3");
     }
+    printf("sum1 = sum = sum/6=%f\n", sum);
     return;
 }
