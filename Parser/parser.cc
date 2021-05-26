@@ -62,7 +62,7 @@ namespace begonia
                 return AstType::AssignStatement;
             }
             else if (token2.val == TokenType::TOKEN_SEP_LPAREN) {
-                //return AstType::FuncCallExpr;
+                //return AstType::FuncallExpr;
                 return AstType::Expr;
             }
             else if(isExprToken(token2.val)){

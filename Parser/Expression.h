@@ -76,7 +76,7 @@ namespace begonia
         FuncCallExpression(std::string identifier, std::vector<ExpressionPtr>  parameters){
             _identifier = identifier;
             _parameters = parameters;
-            _type = AstType::FuncCallExpr;
+            _type = AstType::FuncallExpr;
         }
     };
     using FuncCallExpressionPtr = std::shared_ptr<FuncCallExpression>;

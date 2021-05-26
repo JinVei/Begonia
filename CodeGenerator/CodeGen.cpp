@@ -22,7 +22,7 @@ CodeGen::CodeGen(): _builder(_context) {
         {AstType::IfStatement, std::bind(&CodeGen::ifStatementGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::RetStatement, std::bind(&CodeGen::returnGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::Expr, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
-        {AstType::FuncCallExpr, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
+        {AstType::FuncallExpr, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::OpExpr, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::BoolExpr, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
         {AstType::NilExp, std::bind(&CodeGen::exprGen, this, std::placeholders::_1, std::placeholders::_2)},
@@ -88,6 +88,12 @@ int CodeGen::generate(AstPtr ast ) {
     blockGen(ast, env);
 
     _module->print(llvm::errs(), nullptr);
+
+    llvm::raw_ostream &output = llvm::errs();
+
+    if (llvm::verifyModule(*_module.get(), &output)) {
+        assert(false && "verifyModule failed");
+    }
     pass.run(*_module);
     out_dest.flush();
 

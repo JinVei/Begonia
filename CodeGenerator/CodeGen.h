@@ -69,7 +69,7 @@ private:
 
     llvm::Value* declareProtoGen(AstPtr, std::list<Environment>&);
     llvm::Value* assignGen(AstPtr, std::list<Environment>&);
-    llvm::Value* funcCallGen(AstPtr, std::list<Environment>&);
+    llvm::Value* FuncallExprGen(AstPtr, std::list<Environment>&);
     llvm::Value* declareVarGen(AstPtr, std::list<Environment>&);
     llvm::Value* ifStatementGen(AstPtr, std::list<Environment>&);
     llvm::Value* returnGen(AstPtr, std::list<Environment>&);

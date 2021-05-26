@@ -1,7 +1,7 @@
 func printf(s string, f double) int;
 
 func main() void {
-    printf("hello world\n");
+    printf("hello world%f\n",1.0);
     var sum = 1.11;
     var sum2 = sum + 1.22;
     printf("sum2=sum + 1.22=%f\n", sum2);
@@ -12,11 +12,12 @@ func main() void {
     sum = sum/6.0;
     printf("sum = sum = sum/6=%f\n", sum);
     if sum {
-        printf("hi1");
+        printf("hi1%f\n",1.0);
     } elif sum {
-        printf("hi2");
+        printf("hi2%f\n",1.0);
     } else {
-        printf("hi3");
+        printf("hi3%f\n",1.0);
+        return;
     }
     printf("sum1 = sum = sum/6=%f\n", sum);
     return;
