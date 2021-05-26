@@ -43,7 +43,7 @@ public:
         std::map<std::string, llvm::Value*>         declared_variable;
         std::map<std::string, llvm::Function *>     declared_prototype;
         llvm::BasicBlock*                           block;
-        uint64_t                                    if_block_num = 0;
+        uint64_t                                    auto_inc_id = 0;
     };
     using GeneratorHandler = std::function<llvm::Value*(AstPtr,std::list<Environment>&)>;
 
@@ -75,7 +75,7 @@ private:
     llvm::Value* returnGen(AstPtr, std::list<Environment>&);
     llvm::Value* whileStatementGen(AstPtr, std::list<Environment>&);
     llvm::Value* ifBlockGen(std::list<Environment>& env, IfBlock ast, llvm::BasicBlock* block, llvm::BasicBlock* branch, llvm::BasicBlock* merge);
-    llvm::Value* elseBlockGen(std::list<Environment>& env, AstBlockPtr ast, llvm::BasicBlock* merge);
+    llvm::Value* elseBlockGen(std::list<Environment>& env, AstBlockPtr ast, llvm::BasicBlock* block, llvm::BasicBlock* merge);
 
     llvm::Value* exprGen(AstPtr, std::list<Environment>&);
     llvm::Value* opExprGen(AstPtr, std::list<Environment>&);
@@ -84,12 +84,12 @@ private:
     llvm::Value* mulExprGen(ExpressionPtr, ExpressionPtr, std::list<Environment>&);
     llvm::Value* divExprGen(ExpressionPtr, ExpressionPtr, std::list<Environment>&);
     llvm::Value* numberExprGen(AstPtr, std::list<Environment>&);
-    llvm::Value* blockGen(AstPtr, std::list<Environment>);
+    llvm::Value* blockGen(AstPtr, std::list<Environment>&);
     llvm::Value* identifierExprGen(AstPtr, std::list<Environment>&);
     llvm::Value* BoolExprGen(AstPtr, std::list<Environment>&);
     llvm::Value* stringExprGen(AstPtr, std::list<Environment>&);
 
-    llvm::IRBuilder<> getBuilder(std::list<Environment>& env);
+    //llvm::IRBuilder<> getBuilder(std::list<Environment>& env);
     void MainFuncCodegen();
 };
 

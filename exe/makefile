@@ -5,7 +5,7 @@ HRD  ?= $(shell find ../lexer/*.h*) $(shell find ../parser/*.h*) $(shell find ..
 CXX  ?= g++
 
 INCLUDE ?= -I ./ -I  ../lexer -I  ../parser -I ../CodeGenerator 
-LIBS    ?= `llvm-config --cxxflags --ldflags --system-libs --libs all` -lLLVMCore
+LIBS    ?= `llvm-config --cxxflags --ldflags --system-libs --libs all`
 
 
 all:

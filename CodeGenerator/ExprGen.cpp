@@ -85,7 +85,8 @@ llvm::Value* CodeGen::opExprGen(AstPtr ast, std::list<Environment>& env) {
 }
 
 llvm::Value* CodeGen::addExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::list<Environment>& env){
-    auto builder = getBuilder(env);
+    //auto builder = getBuilder(env);
+    llvm::IRBuilder<> builder(env.front().block);
     auto lval = exprGen(lexpr, env);
     auto rval = exprGen(rexpr, env);
     if (!isDoubleType(lval) || !isDoubleType(rval)){
@@ -103,7 +104,8 @@ llvm::Value* CodeGen::addExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::
 }
 
 llvm::Value* CodeGen::subExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::list<Environment>& env){
-    auto builder = getBuilder(env);
+    //auto builder = getBuilder(env);
+    llvm::IRBuilder<> builder(env.front().block);
     auto lval = exprGen(lexpr, env);
     auto rval = exprGen(rexpr, env);
     if (!isDoubleType(lval) || !isDoubleType(rval)){
@@ -121,7 +123,8 @@ llvm::Value* CodeGen::subExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::
 }
 
 llvm::Value* CodeGen::mulExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::list<Environment>& env){
-    auto builder = getBuilder(env);
+    //auto builder = getBuilder(env);
+    llvm::IRBuilder<> builder(env.front().block);
     auto lval = exprGen(lexpr, env);
     auto rval = exprGen(rexpr, env);
     if (!isDoubleType(lval) || !isDoubleType(rval)){
@@ -138,7 +141,8 @@ llvm::Value* CodeGen::mulExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::
     return val;
 }
 llvm::Value* CodeGen::divExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::list<Environment>& env){
-    auto builder = getBuilder(env);
+    //auto builder = getBuilder(env);
+    llvm::IRBuilder<> builder(env.front().block);
     auto lval = exprGen(lexpr, env);
     auto rval = exprGen(rexpr, env);
     if (!isDoubleType(lval) || !isDoubleType(rval)){
@@ -168,7 +172,8 @@ llvm::Value* CodeGen::numberExprGen(AstPtr expr, std::list<Environment>& env){
 }
 
 llvm::Value* CodeGen::stringExprGen(AstPtr ast , std::list<Environment>& env) {
-    auto builder = getBuilder(env);
+    // auto builder = getBuilder(env);
+    llvm::IRBuilder<> builder(env.front().block);
     auto str_expr = std::dynamic_pointer_cast<StringExpression>(ast);
     assert(str_expr != nullptr);
     auto value = builder.CreateGlobalStringPtr(str_expr->_string);
@@ -209,7 +214,8 @@ llvm::Value* CodeGen::BoolExprGen(AstPtr ast, std::list<Environment>& env) {
 }
 
 llvm::Value* CodeGen::funcCallGen(AstPtr ast, std::list<Environment>& env) {
-    auto builder = getBuilder(env);
+    //auto builder = getBuilder(env);
+    llvm::IRBuilder<> builder(env.front().block);
     auto funcall_ast = std::dynamic_pointer_cast<FuncCallExpression>(ast);
     assert(funcall_ast);
     auto found = env.front().declared_prototype.end();

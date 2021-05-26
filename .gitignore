@@ -6,3 +6,6 @@ Begonia.vcxproj.user
 Begonia.vcxproj.filters
 Debug/*
 .vs/*
+exe/out
+exe/out.o
+exe/begonia

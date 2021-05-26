@@ -39,7 +39,7 @@ int CodeGen::initialize(){
     llvm::InitializeAllAsmParsers();
     llvm::InitializeAllAsmPrinters();
 
-    _module =  llvm::make_unique<llvm::Module>(_module_name.c_str(), _context);
+    _module =  std::make_unique<llvm::Module>(_module_name.c_str(), _context);
 
     auto TargetTriple = llvm::sys::getDefaultTargetTriple();
     std::string Error;
@@ -71,7 +71,7 @@ int CodeGen::generate(AstPtr ast ) {
         return 1;
     }
 
-    auto FileType = llvm::TargetMachine::CGFT_ObjectFile;
+    auto FileType = llvm::CGFT_ObjectFile;
 
     llvm::legacy::PassManager           pass;
     if (_target_machine->addPassesToEmitFile(pass, out_dest, nullptr, FileType)) {
@@ -79,12 +79,15 @@ int CodeGen::generate(AstPtr ast ) {
         return 1;
     }
 
-    Environment env;
-    env.block = nullptr;
-    blockGen(ast, {env});
+    std::list<Environment> env;
+    Environment e;
+    llvm::BasicBlock *block = llvm::BasicBlock::Create(_context, "_main");
+    e.block = block;;
+    env.push_back(e);
+
+    blockGen(ast, env);
 
     _module->print(llvm::errs(), nullptr);
-
     pass.run(*_module);
     out_dest.flush();
 
