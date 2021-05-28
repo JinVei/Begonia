@@ -202,8 +202,8 @@ llvm::Value* CodeGen::identifierExprGen(AstPtr ast, std::list<Environment>& env)
         printf("Can't find func:%s\n", id.c_str());
         exit(1);
     }
-
-    return found->second;
+    auto val = _builder.CreateLoad(found->second);
+    return val;
 }
 
 llvm::Value* CodeGen::BoolExprGen(AstPtr ast, std::list<Environment>& env) {

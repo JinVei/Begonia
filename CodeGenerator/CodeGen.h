@@ -44,6 +44,9 @@ public:
         std::map<std::string, llvm::Function *>     declared_prototype;
         llvm::BasicBlock*                           block;
         uint64_t                                    auto_inc_id = 0;
+        uint64_t GetIncID() { 
+            return auto_inc_id++;
+        }
     };
     using GeneratorHandler = std::function<llvm::Value*(AstPtr,std::list<Environment>&)>;
 
@@ -74,7 +77,7 @@ private:
     llvm::Value* ifStatementGen(AstPtr, std::list<Environment>&);
     llvm::Value* returnGen(AstPtr, std::list<Environment>&);
     llvm::Value* whileStatementGen(AstPtr, std::list<Environment>&);
-    llvm::Value* ifBlockGen(std::list<Environment>& env, IfBlock ast, llvm::BasicBlock* block, llvm::BasicBlock* branch, llvm::BasicBlock* merge);
+    llvm::Value* ifBlockGen(std::list<Environment>& env, IfBlock ast, llvm::BasicBlock* block, llvm::BasicBlock* then_block, llvm::BasicBlock* branch, llvm::BasicBlock* merge);
     llvm::Value* elseBlockGen(std::list<Environment>& env, AstBlockPtr ast, llvm::BasicBlock* block, llvm::BasicBlock* merge);
 
     llvm::Value* exprGen(AstPtr, std::list<Environment>&);
@@ -88,6 +91,8 @@ private:
     llvm::Value* identifierExprGen(AstPtr, std::list<Environment>&);
     llvm::Value* BoolExprGen(AstPtr, std::list<Environment>&);
     llvm::Value* stringExprGen(AstPtr, std::list<Environment>&);
+
+    void CondBranchGen(std::list<Environment>& env,llvm::Value* val, llvm::BasicBlock* true_br, llvm::BasicBlock* false_br);
 
     //llvm::IRBuilder<> getBuilder(std::list<Environment>& env);
     void MainFuncCodegen();
