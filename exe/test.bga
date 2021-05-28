@@ -22,3 +22,8 @@ func main() void {
     printf("sum1 = sum = sum/6=%f\n", sum);
     return;
 }
+
+func _start() void {
+    main();
+    return;
+}

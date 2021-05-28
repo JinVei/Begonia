@@ -97,7 +97,16 @@ int CodeGen::generate(AstPtr ast ) {
     pass.run(*_module);
     out_dest.flush();
 
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+    #error "Not support Windwos platform yet"
+#elif __linux__
+    std::string ld_cmd = "ld -o " + _out_filename + " ./" + _out_filename + ".o " " -lc";
+#elif __APPLE__
     std::string ld_cmd = "ld -o " + _out_filename + " ./" + _out_filename + ".o " + " -lSystem -macosx_version_min 10.14";
+#else
+    #error "Unknow OS platform"
+#endif
+
 
     int retcode = system(ld_cmd.c_str());
     if (retcode != 0) 

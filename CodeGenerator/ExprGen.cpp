@@ -34,7 +34,7 @@ llvm::Value* CodeGen::exprGen(AstPtr ast, std::list<Environment>& env) {
         case AstType::NilExp:
             //TODO:
         default:
-            printf("[exprGen] unknown expr type:%hhu\n", expr->GetType());
+            printf("[exprGen] unknown expr type:%hhu\n", int(expr->GetType()));
             assert(false);
             return nullptr;
     }
@@ -216,7 +216,7 @@ llvm::Value* CodeGen::BoolExprGen(AstPtr ast, std::list<Environment>& env) {
 llvm::Value* CodeGen::FuncallExprGen(AstPtr ast, std::list<Environment>& env) {
     auto& builder = _builder;
     builder.SetInsertPoint(env.front().block);
-    auto funcall_ast = std::dynamic_pointer_cast<FuncCallExpression>(ast);
+    auto funcall_ast = std::dynamic_pointer_cast<FuncallExpression>(ast);
     assert(funcall_ast);
     auto found = env.front().declared_prototype.end();
     for (auto& env_frame : env) {

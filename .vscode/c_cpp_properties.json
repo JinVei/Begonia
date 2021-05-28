@@ -4,12 +4,13 @@
             "name": "MacOs",
             "includePath": [
                 "${workspaceRoot}",
-                "${workspaceRoot}/Lexer",
-                "${workspaceRoot}/Parser",
+                "${workspaceRoot}/lexer",
+                "${workspaceRoot}/parser",
                 "${workspaceRoot}/vm",
                 "/usr/local/include/c++",
                 "/usr/local/include",
-                "/usr/local/opt/llvm/include"
+                "/usr/local/opt/llvm/include",
+                "/usr/lib/llvm-10/include"
             ],
             "defines": [
                 "_DEBUG",
