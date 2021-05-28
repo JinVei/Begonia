@@ -1,0 +1,13 @@
+
+var lexerTest int = 89;
+func test() retType
+{
+	if lexerTest != 0 {
+		lexerTest = 100
+		lexerTest = 100.11
+	}
+
+	var str = "hi"
+	var str1 = 'no, nerver'
+
+}
