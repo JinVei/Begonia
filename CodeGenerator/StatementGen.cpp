@@ -161,11 +161,12 @@ llvm::Value* CodeGen::declareVarGen(AstPtr ast, std::list<Environment>& env) {
     assert(var_stat != nullptr);
 
     llvm::Value* var_addr = nullptr;
-    if (var_stat->_type != "") {
-        var_addr = builder.CreateAlloca(getValueType(var_stat->_type));
-    
-    }else if (var_stat->_assign_value != nullptr) {
+    if (var_stat->_assign_value != nullptr) {
         llvm::Value* assign_value = exprGen(var_stat->_assign_value, env);
+        if (var_stat->_type != "" && (assign_value->getType() != getValueType(var_stat->_type))){
+            assert(false && "var type no matched");
+        }
+        
         assert(assign_value != nullptr);
         if (assign_value->getType()->isPointerTy()
          && assign_value->getType() != llvm::Type::getInt8PtrTy(_context)) {
@@ -176,7 +177,10 @@ llvm::Value* CodeGen::declareVarGen(AstPtr ast, std::list<Environment>& env) {
         }
 
         builder.CreateStore(assign_value, var_addr);
-    } else{
+
+    } else if (var_stat->_type != "") {
+        var_addr = builder.CreateAlloca(getValueType(var_stat->_type));
+    }else {
         assert(false&&"Unkown type for define variable");
     }
 
@@ -295,7 +299,15 @@ void CodeGen::CondBranchGen(std::list<Environment>& env,llvm::Value* val, llvm::
     auto ltype = val->getType();
     llvm::Value* cond_val;
     if (ltype->isIntegerTy()) {
-        auto nul_val = llvm::Constant::getNullValue(llvm::Type::getInt1Ty(_context));
+        llvm::Constant* nul_val;
+        if (ltype == llvm::Type::getInt64Ty(_context)) {
+            nul_val = llvm::Constant::getNullValue(llvm::Type::getInt64Ty(_context));
+        } else if (ltype == llvm::Type::getInt1Ty(_context)) {
+             nul_val = llvm::Constant::getNullValue(llvm::Type::getInt1Ty(_context));
+        } else {
+            ltype->print(llvm::errs());
+            assert(false && "\nKnow Type");
+        }
         cond_val = _builder.CreateICmpEQ(val, nul_val, std::to_string(e.GetIncID()));
 
     } else if (ltype->isDoubleTy()) {
@@ -308,7 +320,7 @@ void CodeGen::CondBranchGen(std::list<Environment>& env,llvm::Value* val, llvm::
         assert(false && "\nKnow Type");
     }
 
-    _builder.CreateCondBr(cond_val, true_br, false_br);
+    _builder.CreateCondBr(cond_val,false_br, true_br);
 }
 
 } //begonia

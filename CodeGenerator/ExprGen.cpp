@@ -78,8 +78,8 @@ llvm::Value* CodeGen::opExprGen(AstPtr ast, std::list<Environment>& env) {
         case TokenType::TOKEN_OP_LT:
             //TODO:
         default:
-            printf("[opExprGen] unkown op");
-            assert(false);
+            printf("[opExprGen] unkown op:%d", int(opexpr->_op));
+            assert(false && "[opExprGen] unkown op");
             return nullptr;
     }
 }
