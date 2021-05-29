@@ -1,0 +1,4 @@
+func _start(a1 int,a2 int) void {
+    var x = 2;
+    return;
+}

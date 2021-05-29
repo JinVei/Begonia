@@ -100,7 +100,7 @@ int CodeGen::generate(AstPtr ast ) {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
     #error "Not support Windwos platform yet"
 #elif __linux__
-    std::string ld_cmd = "ld -o " + _out_filename + " ./" + _out_filename + ".o " " -lc";
+    std::string ld_cmd = "ld -o " + _out_filename + " ./" + _out_filename + ".o";
 #elif __APPLE__
     std::string ld_cmd = "ld -o " + _out_filename + " ./" + _out_filename + ".o " + " -lSystem -macosx_version_min 10.14";
 #else

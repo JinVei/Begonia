@@ -79,25 +79,22 @@ llvm::Value* CodeGen::declareProtoGen(AstPtr ast, std::list<Environment>& env) {
     
     env.front().declared_prototype[funcAst->_name] = func;
 
-    auto decl_arg = (funcAst->_decl_vars).begin();
+    Environment current_env;
+
+    auto decl_args = (funcAst->_decl_vars).begin();
     for (auto &arg : func->args()) {
-        arg.setName((*decl_arg)->_name);
+        arg.setName((*decl_args)->_name);
+        decl_args++;
+        current_env.declared_variable[arg.getName().str()] = &arg;
     }
 
-    Environment current_env;
     if (funcAst->_block->size() != 0) {
         llvm::BasicBlock *block = llvm::BasicBlock::Create(_context, "entry", func);
-        _builder.SetInsertPoint(env.front().block);
-        for (auto &arg : func->args()) {
-            llvm::AllocaInst *Alloca = _builder.CreateAlloca(arg.getType(), nullptr, arg.getName());
-            _builder.CreateStore(&arg, Alloca);
-            current_env.declared_variable[arg.getName().str()] = Alloca;
-        }
         current_env.block = block;
-
+        _builder.SetInsertPoint(current_env.block);
+ 
         env.push_front(current_env);
         blockGen(funcAst->_block, env);
-
         env.pop_front();
     }
     // llvm::raw_ostream &output = llvm::errs();

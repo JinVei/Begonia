@@ -34,7 +34,7 @@ llvm::Value* CodeGen::exprGen(AstPtr ast, std::list<Environment>& env) {
         case AstType::NilExp:
             //TODO:
         default:
-            printf("[exprGen] unknown expr type:%hhu\n", int(expr->GetType()));
+            printf("[exprGen] unknown expr type:%d\n", int(expr->GetType()));
             assert(false);
             return nullptr;
     }

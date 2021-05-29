@@ -9,5 +9,5 @@ LIBS    ?= `llvm-config --cxxflags --ldflags --system-libs --libs all`
 
 
 all:
-	$(CXX) -std=c++2a   $(SRCS) $(LIBS) $(INCLUDE) -o begonia
+	$(CXX) -std=c++2a   $(SRCS) $(LIBS) $(INCLUDE) -o begonia -ggdb
 
