@@ -10,13 +10,13 @@ Begonia is toy compiler for learning purpose. Begonia parses its program languag
 ### BUILD & RUN
 Run "```make```" on root directory of Begonia, and then our compiler would build into location of './bin/begonia'. 
 
-Finally, Run below command to compile .bga file into Binary：
+Finally, Run below command to compile .bga file into Binary:
 
 ```./bin/begonia *.bga ```
 
 NOTE: Not fully support windows plaform yet.
 
-### Grammar definition
+### Grammar
 
 ```
 block := {Statement}
