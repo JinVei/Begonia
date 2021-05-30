@@ -64,6 +64,8 @@ private:
     std::string                         _out_filename = "out";
     std::string                         _module_name = "module";
     llvm::TargetMachine*                _target_machine = nullptr;
+    std::string                         _entry_point_func = "_begonia_main";
+    std::string                         internal_main_func = "main";
 
 
     llvm::Type* getValueType(std::string type_name);

@@ -105,14 +105,19 @@ llvm::Value* CodeGen::declareProtoGen(AstPtr ast, std::list<Environment>& env) {
 }
 
 llvm::Value* CodeGen::blockGen(AstPtr ast, std::list<Environment>& env) {
-    auto block = std::dynamic_pointer_cast<AstBlock>(ast);
-    assert(block != nullptr);
+    auto ast_block = std::dynamic_pointer_cast<AstBlock>(ast);
+    assert(ast_block != nullptr);
+    auto block = _builder.GetInsertBlock();
 
-    for(auto statement : *block) {
+    for(auto statement : *ast_block) {
         auto found = _generator.find(statement->GetType());
         assert(found != _generator.end());
         auto handler = found->second;
         handler(statement, env);
+
+        if (statement->GetType() == AstType::RetStatement){
+            break;
+        }
     }
     return nullptr;
 }
@@ -273,15 +278,12 @@ llvm::Value* CodeGen::ifStatementGen(AstPtr ast, std::list<Environment>& env) {
     auto merge_block = llvm::BasicBlock::Create(_context, std::to_string(env.front().GetIncID()) + ".ifend", paren_func);
 
     size_t if_block_num = if_stat->_if_blocks.size();
-    int incoming_num = if_block_num;
     auto block_ast = if_stat->_if_blocks;
     assert(block_ast.size() > 0);
     for(size_t i=0; i<if_block_num-1; i++) {
         ifBlockGen(env, block_ast[i], if_blocks[i], then_blocks[i], if_blocks[i+1], merge_block);
     }
-    int else_incomming_num = 0;
     if (else_block != nullptr) {
-        else_incomming_num++;
         ifBlockGen(env, block_ast[if_block_num-1], if_blocks[if_block_num-1], then_blocks[if_block_num-1], else_block, merge_block);
         elseBlockGen(env, if_stat->_else_block, else_block, merge_block);
     } else {

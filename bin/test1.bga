@@ -3,11 +3,16 @@ func exit(code int) void;
 func printf(s string) int;
 func open(pathname string, flags int) int;
 
-func _start() void {
+
+func main() void {
     var x = 0;
     var code = open("./test2.t",0);
     if code  {
         exit(1);
+    }
+    if x {
+        return;
+        exit(2);
     }
     var b = 3;
     if b {
