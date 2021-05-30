@@ -147,7 +147,7 @@ namespace begonia {
         case TokenType::TOKEN_IDENTIFIER:
             try_token1 = _lexer.LookAhead(1);
             if (try_token1.val == TokenType::TOKEN_SEP_LPAREN) {
-                return ParseFuncCallExpression();
+                return ParseFuncallExpression();
             } else {
                 token = _lexer.GetNextToken();
                 return IdentifierExpressionPtr(new IdentifierExpression{token.word});
@@ -186,16 +186,16 @@ namespace begonia {
         return parameters;
     }
 
-    auto Parser::ParseFuncCallExpression() -> FuncCallExpressionPtr {
+    auto Parser::ParseFuncallExpression() -> FuncallExpressionPtr {
         Token id_token = _lexer.GetNextToken();
         Token lparen_token = _lexer.GetNextToken();
         if (id_token.val != TokenType::TOKEN_IDENTIFIER) {
             ParseError(id_token, "identifier");
-            return FuncCallExpressionPtr(nullptr);
+            return FuncallExpressionPtr(nullptr);
         }
         if (lparen_token.val != TokenType::TOKEN_SEP_LPAREN) {
             ParseError(lparen_token, "(");
-            return FuncCallExpressionPtr(nullptr);
+            return FuncallExpressionPtr(nullptr);
         }
 
         std::vector<ExpressionPtr> parameters;
@@ -204,11 +204,11 @@ namespace begonia {
         Token rparen = _lexer.GetNextToken();
         if (rparen.val != TokenType::TOKEN_SEP_RPAREN) { // )
             ParseError(rparen, ")");
-            return FuncCallExpressionPtr(nullptr);
+            return FuncallExpressionPtr(nullptr);
         }
-        auto funcallExp = new FuncCallExpression {id_token.word, parameters};
+        auto funcallExp = new FuncallExpression {id_token.word, parameters};
 
-        return FuncCallExpressionPtr(funcallExp);
+        return FuncallExpressionPtr(funcallExp);
         
     }
 }

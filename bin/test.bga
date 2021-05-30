@@ -1,0 +1,29 @@
+func printf(s string, f double) int;
+
+func main() void {
+    printf("hello world%f\n",1.0);
+    var sum = 1.11;
+    var sum2 = sum + 1.22;
+    printf("sum2=sum + 1.22=%f\n", sum2);
+    sum2 = sum2 - 2.0;
+    printf("sum2=sum2 - 2.0=%f\n", sum2);
+    sum = sum2 * 99.1;
+    printf("sum = sum2 * 99=%f\n", sum);
+    sum = sum/6.0;
+    printf("sum = sum = sum/6=%f\n", sum);
+    if sum {
+        printf("hi1%f\n",1.0);
+    } elif sum {
+        printf("hi2%f\n",1.0);
+    } else {
+        printf("hi3%f\n",1.0);
+        return;
+    }
+    printf("sum1 = sum = sum/6=%f\n", sum);
+    return;
+}
+
+func _start() void {
+    main();
+    return;
+}

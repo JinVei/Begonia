@@ -1,6 +1,6 @@
 #ifndef BEGONIA_EXPRESSION_H
 #define BEGONIA_EXPRESSION_H
-#include "AST.h"
+#include "ast.h"
 
 #include <memory>
 #include <vector>
@@ -70,16 +70,16 @@ namespace begonia
     };
     using IdentifierExpressionPtr = std::shared_ptr<IdentifierExpression>;
 
-    struct FuncCallExpression: public Expression {
+    struct FuncallExpression: public Expression {
         std::string                 _identifier;
         std::vector<ExpressionPtr>  _parameters;
-        FuncCallExpression(std::string identifier, std::vector<ExpressionPtr>  parameters){
+        FuncallExpression(std::string identifier, std::vector<ExpressionPtr>  parameters){
             _identifier = identifier;
             _parameters = parameters;
-            _type = AstType::FuncCallExpr;
+            _type = AstType::FuncallExpr;
         }
     };
-    using FuncCallExpressionPtr = std::shared_ptr<FuncCallExpression>;
+    using FuncallExpressionPtr = std::shared_ptr<FuncallExpression>;
 
 }
 #endif

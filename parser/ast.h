@@ -15,7 +15,7 @@ enum class AstType: uint8_t {
     WhileStatement,
     RetStatement,
     Expr,
-    FuncCallExpr,
+    FuncallExpr,
     OpExpr,
     BoolExpr,
     NilExp,

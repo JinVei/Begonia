@@ -1,0 +1,25 @@
+
+func exit(code int) void;
+func printf(s string) int;
+func open(pathname string, flags int) int;
+
+
+func main() void {
+    var x = 0;
+    var code = open("./test2.t",0);
+    if code  {
+        exit(1);
+    }
+    if x {
+        return;
+        exit(2);
+    }
+    var b = 3;
+    if b {
+        exit(3);
+    }
+    exit(4);
+    printf("aa");
+    exit(0);
+    return;
+}

@@ -62,7 +62,7 @@ namespace begonia
                 return AstType::AssignStatement;
             }
             else if (token2.val == TokenType::TOKEN_SEP_LPAREN) {
-                //return AstType::FuncCallExpr;
+                //return AstType::FuncallExpr;
                 return AstType::Expr;
             }
             else if(isExprToken(token2.val)){
@@ -348,8 +348,8 @@ namespace begonia
             return IfStatementPtr(nullptr);
         }
 
-        std::list<IfBlock> if_blocks;
-        AstBlockPtr else_block(new AstBlock{});
+        std::vector<IfBlock> if_blocks;
+        AstBlockPtr else_block;
 
         ExpressionPtr if_cond_exp = ParseExpression();
 

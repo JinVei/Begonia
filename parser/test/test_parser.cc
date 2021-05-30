@@ -23,9 +23,9 @@ void RraverseStatement(begonia::AstBlock statment_block) {
             auto ptr = std::dynamic_pointer_cast<begonia::AssignStatement>(statment);
             std::cout<<"name:" << ptr->_identifier << std::endl;
 
-        } else if (statment->GetType() == begonia::AstType::FuncCallExpr) {
+        } else if (statment->GetType() == begonia::AstType::FuncallExpr) {
             std::cout<<"CALL_FUNC_STATEMENT\n";
-            auto ptr = std::dynamic_pointer_cast<begonia::FuncCallExpression>(statment);
+            auto ptr = std::dynamic_pointer_cast<begonia::FuncallExpression>(statment);
             std::cout<<"name:" << ptr->_identifier << std::endl;
 
         } else if (statment->GetType() == begonia::AstType::DeclareFuncStatement) {

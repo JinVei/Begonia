@@ -1,9 +1,0 @@
-func printf(s string, f double) int;
-
-func main() void {
-    printf("hello world\n");
-    var sum = 1.11;
-    var sum2 = sum + 1.22;
-    printf("%f\n", sum2);
-    return;
-}

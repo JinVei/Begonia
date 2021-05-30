@@ -25,16 +25,16 @@ llvm::Value* CodeGen::exprGen(AstPtr ast, std::list<Environment>& env) {
             return numberExprGen(ast, env);
         case AstType::IdentifierExpr:
             return identifierExprGen(ast, env);
-        case AstType::FuncCallExpr:
-            return funcCallGen(ast, env);
+        case AstType::FuncallExpr:
+            return FuncallExprGen(ast, env);
         case AstType::BoolExpr:
             return BoolExprGen(ast, env);
         case AstType::StringExpr:
-            return StringExprGen(ast, env);
+            return stringExprGen(ast, env);
         case AstType::NilExp:
             //TODO:
         default:
-            printf("[exprGen] unknown expr type:%hhu\n", expr->GetType());
+            printf("[exprGen] unknown expr type:%d\n", int(expr->GetType()));
             assert(false);
             return nullptr;
     }
@@ -58,11 +58,11 @@ llvm::Value* CodeGen::opExprGen(AstPtr ast, std::list<Environment>& env) {
         case TokenType::TOKEN_OP_ADD:
             return addExprGen(lexpr,rexpr, env);
         case TokenType::TOKEN_OP_SUB:
-            return addExprGen(lexpr,rexpr, env);
+            return subExprGen(lexpr,rexpr, env);
         case TokenType::TOKEN_OP_MUL:
-            return addExprGen(lexpr,rexpr, env);
+            return mulExprGen(lexpr,rexpr, env);
         case TokenType::TOKEN_OP_DIV:
-            return addExprGen(lexpr,rexpr, env);
+            return divExprGen(lexpr,rexpr, env);
         case TokenType::TOKEN_OP_AND:
             //TODO:
         case TokenType::TOKEN_OP_OR:
@@ -78,14 +78,15 @@ llvm::Value* CodeGen::opExprGen(AstPtr ast, std::list<Environment>& env) {
         case TokenType::TOKEN_OP_LT:
             //TODO:
         default:
-            printf("[opExprGen] unkown op");
-            assert(false);
+            printf("[opExprGen] unkown op:%d", int(opexpr->_op));
+            assert(false && "[opExprGen] unkown op");
             return nullptr;
     }
 }
 
 llvm::Value* CodeGen::addExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::list<Environment>& env){
-    auto builder = getBuilder(env);
+    auto& builder = _builder;
+    builder.SetInsertPoint(env.front().block);
     auto lval = exprGen(lexpr, env);
     auto rval = exprGen(rexpr, env);
     if (!isDoubleType(lval) || !isDoubleType(rval)){
@@ -102,6 +103,62 @@ llvm::Value* CodeGen::addExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::
     return val;
 }
 
+llvm::Value* CodeGen::subExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::list<Environment>& env){
+    auto& builder = _builder;
+    builder.SetInsertPoint(env.front().block);
+    auto lval = exprGen(lexpr, env);
+    auto rval = exprGen(rexpr, env);
+    if (!isDoubleType(lval) || !isDoubleType(rval)){
+        assert(false&&"expr type no match double type");
+        return nullptr;
+    }
+    if(rval->getType()->isPointerTy()){
+        rval = builder.CreateLoad(llvm::Type::getDoubleTy(_context), rval);
+    }
+    if(lval->getType()->isPointerTy()){
+        lval = builder.CreateLoad(llvm::Type::getDoubleTy(_context), lval);
+    }
+    auto val = builder.CreateFSub(lval, rval);
+    return val;
+}
+
+llvm::Value* CodeGen::mulExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::list<Environment>& env){
+    auto& builder = _builder;
+    builder.SetInsertPoint(env.front().block);
+    auto lval = exprGen(lexpr, env);
+    auto rval = exprGen(rexpr, env);
+    if (!isDoubleType(lval) || !isDoubleType(rval)){
+        assert(false&&"expr type no match double type");
+        return nullptr;
+    }
+    if(rval->getType()->isPointerTy()){
+        rval = builder.CreateLoad(llvm::Type::getDoubleTy(_context), rval);
+    }
+    if(lval->getType()->isPointerTy()){
+        lval = builder.CreateLoad(llvm::Type::getDoubleTy(_context), lval);
+    }
+    auto val = builder.CreateFMul(lval, rval);
+    return val;
+}
+llvm::Value* CodeGen::divExprGen(ExpressionPtr lexpr, ExpressionPtr rexpr, std::list<Environment>& env){
+    auto& builder = _builder;
+    builder.SetInsertPoint(env.front().block);
+    auto lval = exprGen(lexpr, env);
+    auto rval = exprGen(rexpr, env);
+    if (!isDoubleType(lval) || !isDoubleType(rval)){
+        assert(false&&"expr type no match double type");
+        return nullptr;
+    }
+    if(rval->getType()->isPointerTy()){
+        rval = builder.CreateLoad(llvm::Type::getDoubleTy(_context), rval);
+    }
+    if(lval->getType()->isPointerTy()){
+        lval = builder.CreateLoad(llvm::Type::getDoubleTy(_context), lval);
+    }
+    auto val = builder.CreateFDiv(lval, rval);
+    return val;
+}
+
 llvm::Value* CodeGen::numberExprGen(AstPtr expr, std::list<Environment>& env){
     NumberExpressionPtr numberExpr = std::dynamic_pointer_cast<NumberExpression>(expr);
     assert(numberExpr != nullptr);
@@ -114,8 +171,9 @@ llvm::Value* CodeGen::numberExprGen(AstPtr expr, std::list<Environment>& env){
     return value;
 }
 
-llvm::Value* CodeGen::StringExprGen(AstPtr ast , std::list<Environment>& env) {
-    auto builder = getBuilder(env);
+llvm::Value* CodeGen::stringExprGen(AstPtr ast , std::list<Environment>& env) {
+    auto& builder = _builder;
+    builder.SetInsertPoint(env.front().block);
     auto str_expr = std::dynamic_pointer_cast<StringExpression>(ast);
     assert(str_expr != nullptr);
     auto value = builder.CreateGlobalStringPtr(str_expr->_string);
@@ -127,13 +185,25 @@ llvm::Value* CodeGen::identifierExprGen(AstPtr ast, std::list<Environment>& env)
     auto id_expr = std::dynamic_pointer_cast<IdentifierExpression>(ast);
     assert(id_expr != nullptr);
     std::string id = id_expr->_identifier;
-    auto found = env.front().declared_variable.find(id);
-    if (found == env.front().declared_variable.end()) {
-        printf("Can't find identifier:%s\n", id.c_str());
-        exit(1);
-        return nullptr;
+    // auto found = env.front().declared_variable.find(id);
+    // if (found == env.front().declared_variable.end()) {
+    //     printf("Can't find identifier:%s\n", id.c_str());
+    //     exit(1);
+    //     return nullptr;
+    // }
+    auto found = env.front().declared_variable.end();
+    for (auto& env_frame : env) {
+        found = env_frame.declared_variable.find(id);
+        if (found != env_frame.declared_variable.end()) {
+            break;
+        }
     }
-    return found->second;
+    if (found == env.back().declared_variable.end()) {
+        printf("Can't find func:%s\n", id.c_str());
+        exit(1);
+    }
+    auto val = _builder.CreateLoad(found->second);
+    return val;
 }
 
 llvm::Value* CodeGen::BoolExprGen(AstPtr ast, std::list<Environment>& env) {
@@ -143,9 +213,10 @@ llvm::Value* CodeGen::BoolExprGen(AstPtr ast, std::list<Environment>& env) {
     return value;
 }
 
-llvm::Value* CodeGen::funcCallGen(AstPtr ast, std::list<Environment>& env) {
-    auto builder = getBuilder(env);
-    auto funcall_ast = std::dynamic_pointer_cast<FuncCallExpression>(ast);
+llvm::Value* CodeGen::FuncallExprGen(AstPtr ast, std::list<Environment>& env) {
+    auto& builder = _builder;
+    builder.SetInsertPoint(env.front().block);
+    auto funcall_ast = std::dynamic_pointer_cast<FuncallExpression>(ast);
     assert(funcall_ast);
     auto found = env.front().declared_prototype.end();
     for (auto& env_frame : env) {
